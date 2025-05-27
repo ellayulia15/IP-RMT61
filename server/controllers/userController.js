@@ -25,17 +25,23 @@ class UserController {
     static async login(req, res, next) {
         try {
             const { email, password } = req.body;
+            if (!email) {
+                throw { name: 'BadRequest', message: 'Email is required' };
+            }
+            if (!password) {
+                throw { name: 'BadRequest', message: 'Password is required' };
+            }
 
             // Check if user exists
             const user = await User.findOne({ where: { email } });
             if (!user) {
-                throw { status: 401, message: 'Invalid email/password' };
+                throw { name: 'Unauthorized', message: 'Invalid email/password' };
             }
 
             // Verify password
             const isPasswordValid = comparePassword(password, user.password);
             if (!isPasswordValid) {
-                throw { status: 401, message: 'Invalid email/password' };
+                throw { name: 'Unauthorized', message: 'Invalid email/password' };
             }
 
             // Generate JWT token
