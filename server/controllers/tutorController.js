@@ -25,6 +25,46 @@ class TutorController {
             next(err);
         }
     }
+
+    static async updateTutorProfile(req, res, next) {
+        try {
+            const { photoUrl, subjects, style } = req.body;
+
+            // Check if user is tutor
+            if (req.user.role !== 'Tutor') {
+                throw { name: 'Forbidden', message: 'Only users with Tutor role can update a profile' };
+            }
+
+            // Find tutor profile
+            const tutorProfile = await Tutor.findOne({
+                where: { UserId: req.user.id }
+            });
+
+            if (!tutorProfile) {
+                throw { name: 'NotFound', message: 'Tutor profile not found' };
+            }
+
+            // Update tutor profile
+            const updatedTutor = await tutorProfile.update({
+                photoUrl,
+                subjects,
+                style
+            });
+
+            res.json({
+                message: 'Tutor profile updated successfully',
+                data: {
+                    id: updatedTutor.id,
+                    photoUrl: updatedTutor.photoUrl,
+                    subjects: updatedTutor.subjects,
+                    style: updatedTutor.style,
+                    UserId: updatedTutor.UserId
+                }
+            });
+        } catch (err) {
+            next(err);
+        }
+    }
 }
 
 module.exports = TutorController;

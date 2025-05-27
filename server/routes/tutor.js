@@ -5,5 +5,6 @@ const authentication = require('../middlewares/authentication');
 
 // Protected routes - require authentication
 router.post('/tutors', authentication, TutorController.createTutorProfile);
+router.put('/tutors', authentication, TutorController.updateTutorProfile);
 
 module.exports = router;
