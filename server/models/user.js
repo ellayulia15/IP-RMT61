@@ -15,22 +15,15 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   User.init({
-    username: {
+    fullName: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: {
-        msg: 'Username already exists'
-      },
       validate: {
         notNull: {
-          msg: 'Username is required'
+          msg: 'Full name is required'
         },
         notEmpty: {
-          msg: 'Username is required'
-        },
-        len: {
-          args: [4],
-          msg: 'Username must be 4 characters long'
+          msg: 'Full name is required'
         }
       }
     },
