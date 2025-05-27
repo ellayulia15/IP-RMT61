@@ -47,12 +47,12 @@ A platform that connects private tutors with students (or parents) looking for t
 
 ### Users Table
 - id: INTEGER, PK, AUTO_INCREMENT
-- username: STRING(50), UNIQUE, NOT NULL, MIN(3)
-- email: STRING(100), UNIQUE, NOT NULL, isEmail
+- username: STRING, UNIQUE, NOT NULL, MIN(4)
+- email: STRING, UNIQUE, NOT NULL, isEmail
 - password: STRING, NOT NULL, MIN(6)
-- role: ENUM('admin', 'student', 'tutor'), NOT NULL
-- created_at: DATE, NOT NULL
-- updated_at: DATE, NOT NULL
+- role: STRING, NOT NULL
+- createdAt: DATE, NOT NULL
+- updatedAt: DATE, NOT NULL
 
 ### Tutors Profile
 - id: INTEGER, PK, AUTO_INCREMENT
