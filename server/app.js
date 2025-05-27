@@ -1,11 +1,11 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const routes = require('./server/routes');
+const routes = require('./routes');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Middleware
+// Middleware for CORS and request parsing
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -16,6 +16,9 @@ app.get('/', (req, res) => {
         message: 'TutorHub API Server'
     });
 });
+
+// Routes
+app.use(routes);
 
 // Error handler middleware
 app.use((err, req, res, next) => {
