@@ -1,6 +1,57 @@
-const { Tutor } = require('../models');
+const { Tutor, User, Schedule } = require('../models');
+const { Op } = require('sequelize');
 
 class TutorController {
+    static async getAllTutors(req, res, next) {
+        try {
+            const tutors = await Tutor.findAll({
+                include: [
+                    {
+                        model: User,
+                        attributes: ['fullName'] // Only include safe user data
+                    }
+                ]
+            });
+
+            res.json({
+                message: 'Tutors retrieved successfully',
+                data: tutors
+            });
+        } catch (err) {
+            next(err);
+        }
+    } static async getTutorById(req, res, next) {
+        try {
+            const tutor = await Tutor.findByPk(req.params.id, {
+                include: [
+                    {
+                        model: User,
+                        attributes: ['fullName', 'email']
+                    },
+                    {
+                        model: Schedule,
+                        where: {
+                            date: {
+                                [Op.gte]: new Date() // Only include future schedules
+                            }
+                        },
+                        required: false // LEFT JOIN to show tutor even without schedules
+                    }
+                ]
+            });
+
+            if (!tutor) {
+                throw { name: 'NotFound', message: 'Tutor not found' };
+            }
+
+            res.json({
+                message: 'Tutor retrieved successfully',
+                data: tutor
+            });
+        } catch (err) {
+            next(err);
+        }
+    }
     static async createTutorProfile(req, res, next) {
         try {
             const { photoUrl, subjects, style } = req.body;
