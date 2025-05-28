@@ -75,6 +75,35 @@ class TutorController {
         } catch (err) {
             next(err);
         }
+    } static async getMyProfile(req, res, next) {
+        try {
+            // Check if user is tutor
+            if (req.user.role !== 'Tutor') {
+                throw { name: 'Forbidden', message: 'Only tutors can access this endpoint' };
+            }
+
+            // Get tutor profile with associated data
+            const tutorProfile = await Tutor.findOne({
+                where: { UserId: req.user.id }
+            });
+
+            if (!tutorProfile) {
+                throw { name: 'NotFound', message: 'Tutor profile not found' };
+            }
+
+            // Get schedules separately to avoid any join issues
+            res.json({
+                message: 'Tutor profile retrieved successfully',
+                data: {
+                    id: tutorProfile.id,
+                    photoUrl: tutorProfile.photoUrl,
+                    subjects: tutorProfile.subjects,
+                    style: tutorProfile.style
+                }
+            });
+        } catch (err) {
+            next(err);
+        }
     }
 
     static async updateTutorProfile(req, res, next) {
