@@ -11,6 +11,7 @@ import AddSchedule from "./pages/AddSchedule";
 import UpdateSchedule from "./pages/UpdateSchedule";
 import Detail from "./pages/Detail";
 import CreateBooking from "./pages/CreateBooking";
+import StudentBookings from "./pages/StudentBookings";
 
 // Auth protection component
 function RequireAuth({ children }) {
@@ -49,6 +50,17 @@ function App() {
         <Route path="/tutors/:id" element={<Detail />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+
+        {/* Protected Student Routes */}
+        <Route path="/student">
+          <Route path="bookings" element={
+            <RequireAuth>
+              <RequireStudent>
+                <StudentBookings />
+              </RequireStudent>
+            </RequireAuth>
+          } />
+        </Route>
 
         {/* Protected Booking Routes */}
         <Route path="/bookings/create/:scheduleId" element={

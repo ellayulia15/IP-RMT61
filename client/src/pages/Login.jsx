@@ -38,7 +38,7 @@ export default function Login() {
             if (data.data.role === 'Tutor') {
                 navigate('/tutor/dashboard');
             } else {
-                navigate('/student/dashboard');
+                navigate('/student/bookings');
             }
         } catch (err) {
             Swal.fire({
