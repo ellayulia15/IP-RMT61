@@ -40,15 +40,14 @@
 ### Login/Register Page
 - Toggle between login and register forms
 - Login Form
-  - Email/Username field
+  - Email field
   - Password field
   - Login button
 - Register Form
   - Choose role (Student/Tutor)
-  - Username field
+  - Full Name field
   - Email field
   - Password field
-  - Confirm password field
   - Register button
 
 ## Student Dashboard
