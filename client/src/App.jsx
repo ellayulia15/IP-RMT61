@@ -9,6 +9,7 @@ import EditProfile from "./pages/EditProfile";
 import Schedule from "./pages/Schedule";
 import AddSchedule from "./pages/AddSchedule";
 import UpdateSchedule from "./pages/UpdateSchedule";
+import Detail from "./pages/Detail";
 
 // Auth protection component
 function RequireAuth({ children }) {
@@ -35,6 +36,7 @@ function App() {
         {/* Public Routes */}
         <Route path="/" element={<Home />} />
         <Route path="/tutors" element={<Tutors />} />
+        <Route path="/tutors/:id" element={<Detail />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
