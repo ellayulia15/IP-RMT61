@@ -1,7 +1,29 @@
+import { useState } from 'react';
 import { Link } from 'react-router';
 import '../styles/home.css';
 
 export default function Home() {
+    const [chatMessages, setChatMessages] = useState([
+        { sender: 'ai', text: "Hi! I'm your AI learning assistant. What subjects are you interested in studying?" }
+    ]);
+    const [userInput, setUserInput] = useState('');
+    const [loading, setLoading] = useState(false);
+
+    const handleInputChange = (e) => setUserInput(e.target.value);
+
+    const handleSend = async (e) => {
+        e.preventDefault();
+        if (!userInput.trim()) return;
+        const newMessages = [...chatMessages, { sender: 'user', text: userInput }];
+        setChatMessages(newMessages);
+        setUserInput('');
+        setLoading(true);
+        // Simulate AI response (replace with real API call)
+        setTimeout(() => {
+            setChatMessages(msgs => [...msgs, { sender: 'ai', text: "Thanks for sharing! (AI recommendation will appear here.)" }]);
+            setLoading(false);
+        }, 1200);
+    };
 
     return (
         <div className="min-vh-100 bg-light">
@@ -79,52 +101,57 @@ export default function Home() {
                     </div>
                 </div>
 
-                {/* AI Chat Demo Section */}
-                <div className="card shadow-sm border-0 overflow-hidden">
-                    <div className="card-body p-4">
-                        <div className="row align-items-center">
-                            <div className="col-lg-6">
-                                <h2 className="h3 mb-3">Experience Smart Learning</h2>
-                                <p className="mb-4">Try our AI chat to get personalized tutor recommendations based on your:</p>
-                                <ul className="list-unstyled mb-4">
-                                    <li className="mb-2"><i className="bi bi-check-circle-fill text-success me-2"></i>Learning Goals</li>
-                                    <li className="mb-2"><i className="bi bi-check-circle-fill text-success me-2"></i>Subject Preferences</li>
-                                    <li className="mb-2"><i className="bi bi-check-circle-fill text-success me-2"></i>Study Schedule</li>
-                                    <li className="mb-2"><i className="bi bi-check-circle-fill text-success me-2"></i>Teaching Style Preference</li>
-                                </ul>
-                                <Link to="/login" className="btn btn-primary">
-                                    Get Started with AI Matching
-                                </Link>
+                {/* AI Chat Recommendation Section */}
+                <div className="row justify-content-center mb-5">
+                    <div className="col-lg-8">
+                        <div className="card shadow-sm border-0 overflow-hidden">
+                            <div className="card-header bg-primary bg-opacity-10 border-0">
+                                <h2 className="h5 mb-0 text-primary"><i className="bi bi-robot me-2"></i>AI Tutor Recommendation Chat</h2>
                             </div>
-                            <div className="col-lg-6">
-                                <div className="p-3 bg-light rounded-3 mt-4 mt-lg-0">
-                                    <div className="chat-demo border rounded-3 p-3 bg-white">
+                            <div className="card-body p-0">
+                                <div style={{ maxHeight: 350, overflowY: 'auto', background: '#f8f9fa' }} className="p-4 chat-ai-area">
+                                    {chatMessages.map((msg, idx) => (
+                                        <div key={idx} className={`d-flex mb-3 ${msg.sender === 'user' ? 'justify-content-end' : ''}`}>
+                                            {msg.sender === 'ai' && (
+                                                <div className="rounded-circle bg-primary p-2 d-flex align-items-center justify-content-center me-2" style={{ width: 40, height: 40 }}>
+                                                    <i className="bi bi-robot text-white"></i>
+                                                </div>
+                                            )}
+                                            <div className={`chat-bubble ${msg.sender === 'ai' ? 'bg-white text-dark' : 'bg-primary text-white'} p-3 rounded-3`} style={{ maxWidth: '70%' }}>
+                                                {msg.text}
+                                            </div>
+                                            {msg.sender === 'user' && (
+                                                <div className="rounded-circle bg-secondary p-2 d-flex align-items-center justify-content-center ms-2" style={{ width: 40, height: 40 }}>
+                                                    <i className="bi bi-person text-white"></i>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                    {loading && (
                                         <div className="d-flex mb-3">
-                                            <div className="rounded-circle bg-primary p-2 d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px' }}>
+                                            <div className="rounded-circle bg-primary p-2 d-flex align-items-center justify-content-center me-2" style={{ width: 40, height: 40 }}>
                                                 <i className="bi bi-robot text-white"></i>
                                             </div>
-                                            <div className="ms-3">
-                                                <p className="mb-0">Hi! I'm your AI learning assistant. What subjects are you interested in studying?</p>
+                                            <div className="chat-bubble bg-white text-dark p-3 rounded-3" style={{ maxWidth: '70%' }}>
+                                                <span className="text-muted">AI is typing...</span>
                                             </div>
                                         </div>
-                                        <div className="d-flex mb-3">
-                                            <div className="rounded-circle bg-secondary p-2 d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px' }}>
-                                                <i className="bi bi-person text-white"></i>
-                                            </div>
-                                            <div className="ms-3">
-                                                <p className="mb-0">I need help with Advanced Mathematics and Physics</p>
-                                            </div>
-                                        </div>
-                                        <div className="d-flex">
-                                            <div className="rounded-circle bg-primary p-2 d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px' }}>
-                                                <i className="bi bi-robot text-white"></i>
-                                            </div>
-                                            <div className="ms-3">
-                                                <p className="mb-0">Great! What's your preferred learning style? Do you like visual explanations or prefer theoretical approaches?</p>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    )}
                                 </div>
+                                <form className="border-top d-flex p-3 bg-white" onSubmit={handleSend}>
+                                    <input
+                                        type="text"
+                                        className="form-control border-0 bg-light me-2"
+                                        placeholder="Type your message..."
+                                        value={userInput}
+                                        onChange={handleInputChange}
+                                        disabled={loading}
+                                        style={{ minHeight: 44 }}
+                                    />
+                                    <button className="btn btn-primary" type="submit" disabled={loading || !userInput.trim()}>
+                                        <i className="bi bi-send"></i>
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>
