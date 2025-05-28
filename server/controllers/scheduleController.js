@@ -14,16 +14,15 @@ class ScheduleController {
                     throw { name: 'NotFound', message: 'Tutor profile not found' };
                 }
 
-                // Get schedules for this tutor
-                return this.getSchedulesByTutor(tutorProfile.id, res, next);
+                const schedules = await Schedule.findAll({
+                    where: { TutorId: tutorProfile.id }
+                });
+
+                return res.json({
+                    message: 'Schedules retrieved successfully',
+                    data: schedules
+                });
             }
-
-            const schedules = await Schedule.findAll();
-
-            res.json({
-                message: 'Schedules retrieved successfully',
-                data: schedules
-            });
         } catch (err) {
             next(err);
         }
@@ -83,7 +82,7 @@ class ScheduleController {
             const schedule = await Schedule.findByPk(req.params.id);
 
             if (!schedule) {
-                throw { name: 'NotFound', message: 'Schedule not found or you do not have permission to update it' };
+                throw { name: 'NotFound', message: 'Schedule not found' };
             }
 
             // Validate date format if provided
@@ -127,7 +126,7 @@ class ScheduleController {
             });
 
             if (!schedule) {
-                throw { name: 'NotFound', message: 'Schedule not found or you do not have permission to delete it' };
+                throw { name: 'NotFound', message: 'Schedule not found' };
             }
 
             await schedule.destroy();
