@@ -7,9 +7,13 @@ export default function DashboardTutor() {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [tutorProfile, setTutorProfile] = useState(null);
+    const [pendingBookings, setPendingBookings] = useState(0);
 
     useEffect(() => {
-        fetchTutorProfile();
+        Promise.all([
+            fetchTutorProfile(),
+            fetchPendingBookings()
+        ]).then(() => setLoading(false));
     }, []);
 
     const fetchTutorProfile = async () => {
@@ -27,6 +31,23 @@ export default function DashboardTutor() {
                 navigate('/login');
             }
             setLoading(false);
+        }
+    };
+
+    const fetchPendingBookings = async () => {
+        try {
+            const { data } = await http.get('/bookings', {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('access_token')}`
+                }
+            });
+            const pending = data.data.filter(booking => booking.bookingStatus === 'Pending').length;
+            setPendingBookings(pending);
+        } catch (err) {
+            if (err.response?.status === 401) {
+                localStorage.clear();
+                navigate('/login');
+            }
         }
     };
 
@@ -63,6 +84,12 @@ export default function DashboardTutor() {
                     </button>
                     <div className="collapse navbar-collapse" id="navbarNav">
                         <ul className="navbar-nav ms-auto">
+                            <li className="nav-item">
+                                <Link to="/tutor/schedules" className="nav-link">Schedules</Link>
+                            </li>
+                            <li className="nav-item">
+                                <Link to="/tutor/bookings" className="nav-link">Bookings</Link>
+                            </li>
                             <li className="nav-item">
                                 <button onClick={handleLogout} className="btn btn-outline-primary">
                                     Logout
@@ -159,7 +186,7 @@ export default function DashboardTutor() {
                                                 </div>
                                                 <div className="ms-3">
                                                     <h3 className="h6 mb-1">Pending Bookings</h3>
-                                                    <h4 className="h3 mb-0">0</h4>
+                                                    <h4 className="h3 mb-0">{pendingBookings}</h4>
                                                 </div>
                                             </div>
                                             <Link to="/tutor/bookings" className="btn btn-light w-100">
