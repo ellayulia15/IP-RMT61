@@ -6,6 +6,9 @@ import Register from "./pages/Register";
 import DashboardTutor from "./pages/DashboardTutor";
 import CreateProfile from "./pages/CreateProfile";
 import EditProfile from "./pages/EditProfile";
+import Schedule from "./pages/Schedule";
+import AddSchedule from "./pages/AddSchedule";
+import UpdateSchedule from "./pages/UpdateSchedule";
 
 // Auth protection component
 function RequireAuth({ children }) {
@@ -55,6 +58,27 @@ function App() {
             <RequireAuth>
               <RequireTutor>
                 <EditProfile />
+              </RequireTutor>
+            </RequireAuth>
+          } />
+          <Route path="schedules" element={
+            <RequireAuth>
+              <RequireTutor>
+                <Schedule />
+              </RequireTutor>
+            </RequireAuth>
+          } />
+          <Route path="schedules/add" element={
+            <RequireAuth>
+              <RequireTutor>
+                <AddSchedule />
+              </RequireTutor>
+            </RequireAuth>
+          } />
+          <Route path="schedules/edit/:id" element={
+            <RequireAuth>
+              <RequireTutor>
+                <UpdateSchedule />
               </RequireTutor>
             </RequireAuth>
           } />

@@ -135,17 +135,17 @@ export default function DashboardTutor() {
                                 <div className="col-sm-6">
                                     <div className="card border-0 shadow-sm">
                                         <div className="card-body p-4">
-                                            <div className="d-flex align-items-center mb-3">
-                                                <div className="bg-primary bg-opacity-10 p-3 rounded">
-                                                    <i className="bi bi-calendar-check text-primary h4 mb-0"></i>
-                                                </div>
-                                                <div className="ms-3">
-                                                    <h3 className="h6 mb-1">Today's Sessions</h3>
-                                                    <h4 className="h3 mb-0">0</h4>
+                                            <div className="d-flex align-items-center mb-3">                                                <div className="bg-primary bg-opacity-10 p-3 rounded">
+                                                <i className="bi bi-calendar-check text-primary h4 mb-0"></i>
+                                            </div>                                    <div className="ms-3">
+                                                    <h3 className="h6 mb-1">Total Schedules</h3>
+                                                    <h4 className="h3 mb-0">{tutorProfile.totalSchedules || 0}</h4>
+                                                    {console.log(tutorProfile, '<<<<<<')
+                                                    }
                                                 </div>
                                             </div>
                                             <Link to="/tutor/schedules" className="btn btn-light w-100">
-                                                View Schedule
+                                                Manage Schedule
                                             </Link>
                                         </div>
                                     </div>

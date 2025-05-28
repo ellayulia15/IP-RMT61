@@ -138,6 +138,34 @@ class ScheduleController {
             next(err);
         }
     }
+
+    static async getScheduleById(req, res, next) {
+        try {
+            const schedule = await Schedule.findByPk(req.params.id);
+
+            if (!schedule) {
+                throw { name: 'NotFound', message: 'Schedule not found' };
+            }
+
+            // If user is tutor, verify ownership
+            if (req.user.role === 'Tutor') {
+                const tutorProfile = await Tutor.findOne({
+                    where: { UserId: req.user.id }
+                });
+
+                if (!tutorProfile || schedule.TutorId !== tutorProfile.id) {
+                    throw { name: 'Forbidden', message: 'You can only view your own schedules' };
+                }
+            }
+
+            res.json({
+                message: 'Schedule retrieved successfully',
+                data: schedule
+            });
+        } catch (err) {
+            next(err);
+        }
+    }
 }
 
 module.exports = ScheduleController;
