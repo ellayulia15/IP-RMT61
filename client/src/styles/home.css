@@ -1,0 +1,31 @@
+.hover-shadow {
+    transition: box-shadow 0.3s ease-in-out;
+}
+
+.hover-shadow:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.navbar-brand {
+    color: #4A90E2 !important;
+}
+
+.btn-info {
+    background-color: #50E3C2 !important;
+    border-color: #50E3C2 !important;
+}
+
+.btn-info:hover {
+    background-color: #3fcfb0 !important;
+    border-color: #3fcfb0 !important;
+}
+
+.btn-primary {
+    background-color: #4A90E2 !important;
+    border-color: #4A90E2 !important;
+}
+
+.btn-primary:hover {
+    background-color: #357abd !important;
+    border-color: #357abd !important;
+}

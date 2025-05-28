@@ -12,7 +12,6 @@
     - Profile photo
     - Name
     - Subject expertise
-    - Rating (stars)
     - Quick view button
 
 ### Tutor Profile Page
