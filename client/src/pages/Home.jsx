@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
 import '../styles/home.css';
+import http from '../lib/http';
 
 export default function Home() {
     const [chatMessages, setChatMessages] = useState([
@@ -18,11 +19,22 @@ export default function Home() {
         setChatMessages(newMessages);
         setUserInput('');
         setLoading(true);
-        // Simulate AI response (replace with real API call)
-        setTimeout(() => {
-            setChatMessages(msgs => [...msgs, { sender: 'ai', text: "Thanks for sharing! (AI recommendation will appear here.)" }]);
+
+        try {
+            // Format pesan untuk OpenAI
+            const messagesForAI = newMessages.map(msg => ({
+                role: msg.sender === 'user' ? 'user' : 'assistant',
+                content: msg.text
+            }));
+            const { data } = await http.post('/ai/chat', { messages: messagesForAI });
+            setChatMessages(msgs => [...msgs, { sender: 'ai', text: data.reply }]);
+        } catch (err) {
+            console.log(err, '<<<error ai');
+
+            setChatMessages(msgs => [...msgs, { sender: 'ai', text: "Sorry, AI is unavailable." }]);
+        } finally {
             setLoading(false);
-        }, 1200);
+        }
     };
 
     return (
