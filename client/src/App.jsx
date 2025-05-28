@@ -10,6 +10,7 @@ import Schedule from "./pages/Schedule";
 import AddSchedule from "./pages/AddSchedule";
 import UpdateSchedule from "./pages/UpdateSchedule";
 import Detail from "./pages/Detail";
+import CreateBooking from "./pages/CreateBooking";
 
 // Auth protection component
 function RequireAuth({ children }) {
@@ -29,6 +30,15 @@ function RequireTutor({ children }) {
   return children;
 }
 
+// Student role protection component
+function RequireStudent({ children }) {
+  const role = localStorage.getItem('user_role');
+  if (role !== 'Student') {
+    return <Navigate to="/" replace />;
+  }
+  return children;
+}
+
 function App() {
   return (
     <BrowserRouter>
@@ -39,6 +49,15 @@ function App() {
         <Route path="/tutors/:id" element={<Detail />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+
+        {/* Protected Booking Routes */}
+        <Route path="/bookings/create/:scheduleId" element={
+          <RequireAuth>
+            <RequireStudent>
+              <CreateBooking />
+            </RequireStudent>
+          </RequireAuth>
+        } />
 
         {/* Protected Tutor Routes */}
         <Route path="/tutor">

@@ -151,10 +151,9 @@ export default function Detail() {
                                                                 style: 'currency',
                                                                 currency: 'IDR'
                                                             })}
-                                                        </td>
-                                                        <td className="text-end">
+                                                        </td>                                                        <td className="text-end">
                                                             <Link
-                                                                to="/login"
+                                                                to={localStorage.getItem('access_token') ? `/bookings/create/${schedule.id}` : '/login'}
                                                                 className="btn btn-sm btn-outline-primary"
                                                             >
                                                                 Book Now
