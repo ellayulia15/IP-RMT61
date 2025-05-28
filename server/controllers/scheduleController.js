@@ -1,6 +1,34 @@
-const { Schedule, Tutor } = require('../models');
+const { Schedule, Tutor, User } = require('../models');
+const { Op } = require('sequelize');
 
 class ScheduleController {
+    static async getAllSchedules(req, res, next) {
+        try {
+            // If user is logged in and is a tutor, only show their schedules
+            if (req.user && req.user.role === 'Tutor') {
+                const tutorProfile = await Tutor.findOne({
+                    where: { UserId: req.user.id }
+                });
+
+                if (!tutorProfile) {
+                    throw { name: 'NotFound', message: 'Tutor profile not found' };
+                }
+
+                // Get schedules for this tutor
+                return this.getSchedulesByTutor(tutorProfile.id, res, next);
+            }
+
+            const schedules = await Schedule.findAll();
+
+            res.json({
+                message: 'Schedules retrieved successfully',
+                data: schedules
+            });
+        } catch (err) {
+            next(err);
+        }
+    }
+
     static async createSchedule(req, res, next) {
         try {
             // Check if user is tutor
@@ -36,6 +64,76 @@ class ScheduleController {
             res.status(201).json({
                 message: 'Schedule created successfully',
                 data: schedule
+            });
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    static async updateSchedule(req, res, next) {
+        try {
+            // Check if user is tutor
+            if (req.user.role !== 'Tutor') {
+                throw { name: 'Forbidden', message: 'Only tutors can update schedules' };
+            }
+
+            const { date, time, fee } = req.body;
+
+            // Find schedule and check ownership
+            const schedule = await Schedule.findByPk(req.params.id);
+
+            if (!schedule) {
+                throw { name: 'NotFound', message: 'Schedule not found or you do not have permission to update it' };
+            }
+
+            // Validate date format if provided
+            let scheduleDate = schedule.date;
+            if (date) {
+                scheduleDate = new Date(date);
+                if (isNaN(scheduleDate.getTime())) {
+                    throw { name: 'BadRequest', message: 'Invalid date format' };
+                }
+            }
+
+            // Update schedule
+            const updatedSchedule = await schedule.update({
+                date: scheduleDate,
+                time: time || schedule.time,
+                fee: fee || schedule.fee
+            });
+
+            res.json({
+                message: 'Schedule updated successfully',
+                data: updatedSchedule
+            });
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    static async deleteSchedule(req, res, next) {
+        try {
+            // Check if user is tutor
+            if (req.user.role !== 'Tutor') {
+                throw { name: 'Forbidden', message: 'Only tutors can delete schedules' };
+            }
+
+            // Find schedule and check ownership
+            const schedule = await Schedule.findByPk(req.params.id, {
+                include: [{
+                    model: Tutor,
+                    where: { UserId: req.user.id } // Ensures tutor owns this schedule
+                }]
+            });
+
+            if (!schedule) {
+                throw { name: 'NotFound', message: 'Schedule not found or you do not have permission to delete it' };
+            }
+
+            await schedule.destroy();
+
+            res.json({
+                message: 'Schedule deleted successfully'
             });
         } catch (err) {
             next(err);
