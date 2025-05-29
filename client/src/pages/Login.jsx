@@ -78,11 +78,9 @@ export default function Login() {
                 confirmButtonColor: '#4A90E2',
                 timer: 1500,
                 showConfirmButton: false
-            });
-
-            // Redirect based on role
+            });            // Redirect based on role
             if (formData.role === 'Student') {
-                navigate('/');
+                navigate('/student/bookings');
             } else {
                 navigate('/tutor/dashboard');
             }

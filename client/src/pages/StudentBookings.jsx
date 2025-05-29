@@ -2,7 +2,8 @@ import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useDispatch, useSelector } from 'react-redux';
 import Swal from 'sweetalert2';
-import { fetchMyBookings } from '../stores/bookings/bookingsSlice';
+import { fetchMyBookings, deleteBooking } from '../stores/bookings/bookingsSlice';
+import http from '../lib/http';
 
 export default function StudentBookings() {
     const navigate = useNavigate();
@@ -19,11 +20,9 @@ export default function StudentBookings() {
                     confirmButtonColor: '#4A90E2'
                 });
             });
-    }, [dispatch]);
-
-    const handleCancelBooking = async (id) => {
+    }, [dispatch]); const handleCancelBooking = async (id) => {
         try {
-            await dispatch(updateBookingStatus({ id, status: 'cancelled' })).unwrap();
+            await dispatch(deleteBooking(id)).unwrap();
             Swal.fire({
                 icon: 'success',
                 title: 'Success!',
@@ -31,10 +30,66 @@ export default function StudentBookings() {
                 confirmButtonColor: '#4A90E2'
             });
         } catch (error) {
+            console.log(error, '<<< error cancel booking');
+
             Swal.fire({
                 icon: 'error',
                 title: 'Oops...',
-                text: 'Failed to cancel booking',
+                text: error.message || 'Failed to cancel booking',
+                confirmButtonColor: '#4A90E2'
+            });
+        }
+    }; const handlePayment = async (id) => {
+        try {
+            console.log('Initiating payment for booking:', id);
+            const { data } = await http.post(`/payments/${id}`, {}, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('access_token')}`
+                }
+            }); console.log('Payment token received:', data);
+
+            window.snap.pay(data.paymentToken, {
+                onSuccess: function (result) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Pembayaran Berhasil!',
+                        text: 'Terima kasih atas pembayaran Anda',
+                        confirmButtonColor: '#4A90E2'
+                    });
+                    dispatch(fetchMyBookings());
+                },
+                onPending: function (result) {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Pembayaran Pending',
+                        text: 'Silakan selesaikan pembayaran Anda',
+                        confirmButtonColor: '#4A90E2'
+                    });
+                    dispatch(fetchMyBookings());
+                },
+                onError: function (result) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Pembayaran Gagal',
+                        text: 'Mohon coba lagi atau pilih metode pembayaran lain',
+                        confirmButtonColor: '#4A90E2'
+                    });
+                },
+                onClose: function () {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Pembayaran Dibatalkan',
+                        text: 'Anda dapat mencoba pembayaran lagi nanti',
+                        confirmButtonColor: '#4A90E2'
+                    });
+                }
+            });
+        } catch (err) {
+            console.error('Payment error:', err);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: err.response?.data?.message || 'Failed to initialize payment',
                 confirmButtonColor: '#4A90E2'
             });
         }
@@ -116,9 +171,7 @@ export default function StudentBookings() {
                                                 style: 'currency',
                                                 currency: 'IDR'
                                             })}
-                                        </p>
-
-                                        {booking.bookingStatus === 'Pending' && (
+                                        </p>                                        {booking.bookingStatus === 'Pending' && (
                                             <button
                                                 onClick={() => handleCancelBooking(booking.id)}
                                                 className="btn btn-outline-danger w-100"
@@ -127,13 +180,18 @@ export default function StudentBookings() {
                                             </button>
                                         )}
 
-                                        {booking.paymentStatus === 'Pending' && (
+                                        {booking.bookingStatus === 'Approved' && booking.paymentStatus === 'Pending' && (
                                             <button
                                                 onClick={() => handlePayment(booking.id)}
                                                 className="btn btn-primary w-100 mt-3"
                                             >
                                                 Pay Now
                                             </button>
+                                        )}                                        {booking.bookingStatus === 'Rejected' && (
+                                            <div className="alert alert-danger mt-3" role="alert">
+                                                <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                                                Booking rejected by tutor. Please check other available schedules.
+                                            </div>
                                         )}
                                     </div>
                                 </div>

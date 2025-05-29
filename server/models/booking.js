@@ -54,9 +54,8 @@ module.exports = (sequelize, DataTypes) => {
         paymentStatus: {
             type: DataTypes.STRING,
             allowNull: false,
-            defaultValue: 'Pending',
-            validate: {
-                isIn: [['Pending', 'paid', 'failed', 'expired']]
+            defaultValue: 'Pending', validate: {
+                isIn: [['Pending', 'paid', 'failed', 'expired', 'cancelled']]
             }
         }
     }, {

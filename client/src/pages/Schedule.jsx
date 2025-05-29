@@ -7,21 +7,33 @@ import Swal from 'sweetalert2';
 export default function Schedule() {
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    // Set a default empty array if items is undefined
-    const { items: schedules = [], loading } = useSelector(state => state.schedules);
+    const { items: schedules = [], loading, error } = useSelector(state => state.schedules);
 
     useEffect(() => {
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            navigate('/login');
+            return;
+        }
+
         dispatch(fetchMySchedules())
             .unwrap()
-            .catch(() => {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Oops...',
-                    text: 'Failed to load schedules. Please try again later.',
-                    confirmButtonColor: '#4A90E2'
-                });
+            .catch((error) => {
+                if (error === 'Session expired') {
+                    localStorage.clear();
+                    navigate('/login');
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: error || 'Failed to load schedules. Please try again later.',
+                        confirmButtonColor: '#4A90E2'
+                    });
+                }
             });
-    }, [dispatch]);    const handleDelete = async (id) => {
+    }, [dispatch, navigate]);
+
+    const handleDelete = async (id) => {
         try {
             await dispatch(deleteSchedule(id)).unwrap();
             Swal.fire({
@@ -38,7 +50,9 @@ export default function Schedule() {
                 confirmButtonColor: '#4A90E2'
             });
         }
-    };if (loading) {
+    };
+
+    if (loading) {
         return (
             <div className="d-flex justify-content-center py-5">
                 <div className="spinner-border text-primary" role="status">
@@ -48,8 +62,6 @@ export default function Schedule() {
         );
     }
 
-    // No need for this line since we've already set a default empty array in useSelector
-
     return (
         <div className="min-vh-100 bg-light">
             <div className="container py-5">
@@ -58,7 +70,8 @@ export default function Schedule() {
                     <Link to="/tutor/schedules/add" className="btn btn-primary">
                         <i className="bi bi-plus-lg me-2"></i>Add New Schedule
                     </Link>
-                </div>                {schedules.length === 0 ? (
+                </div>
+                {schedules.length === 0 ? (
                     <div className="card border-0 shadow-sm">
                         <div className="card-body text-center p-5">
                             <div className="display-1 text-muted mb-4">
@@ -70,7 +83,8 @@ export default function Schedule() {
                             </Link>
                         </div>
                     </div>
-                ) : (                    <div className="row g-4">
+                ) : (
+                    <div className="row g-4">
                         {schedules.map((schedule) => (
                             <div key={schedule.id} className="col-md-6 col-lg-4">
                                 <div className="card border-0 shadow-sm h-100">
@@ -84,7 +98,8 @@ export default function Schedule() {
                                                     day: 'numeric'
                                                 })}
                                             </h5>
-                                        </div>                                        <p className="card-text mb-3">
+                                        </div>
+                                        <p className="card-text mb-3">
                                             <i className="bi bi-clock me-2"></i>
                                             {schedule.time}
                                         </p>

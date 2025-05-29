@@ -5,9 +5,22 @@ export const fetchMyBookings = createAsyncThunk(
     'bookings/fetchMyBookings',
     async (_, { rejectWithValue }) => {
         try {
-            const { data } = await http.get('/bookings');
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                return rejectWithValue('No auth token found');
+            }
+
+            const { data } = await http.get('/bookings', {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
             return data.data;
         } catch (error) {
+            if (error.response?.status === 401) {
+                localStorage.clear();
+                return rejectWithValue('Session expired');
+            }
             return rejectWithValue(error.response?.data?.message || 'Failed to fetch bookings');
         }
     }
@@ -17,9 +30,22 @@ export const fetchTutorBookings = createAsyncThunk(
     'bookings/fetchTutorBookings',
     async (_, { rejectWithValue }) => {
         try {
-            const { data } = await http.get('/bookings');
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                return rejectWithValue('No auth token found');
+            }
+
+            const { data } = await http.get('/bookings', {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
             return data.data;
         } catch (error) {
+            if (error.response?.status === 401) {
+                localStorage.clear();
+                return rejectWithValue('Session expired');
+            }
             return rejectWithValue(error.response?.data?.message || 'Failed to fetch bookings');
         }
     }
@@ -41,10 +67,48 @@ export const updateBookingStatus = createAsyncThunk(
     'bookings/updateStatus',
     async ({ id, status }, { rejectWithValue }) => {
         try {
-            const { data } = await http.patch(`/bookings/${id}/status`, { status });
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                return rejectWithValue('No auth token found');
+            }
+
+            const { data } = await http.patch(`/bookings/${id}/status`, { status }, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
             return data.data;
         } catch (error) {
+            if (error.response?.status === 401) {
+                localStorage.clear();
+                return rejectWithValue('Session expired');
+            }
             return rejectWithValue(error.response?.data?.message || 'Failed to update booking status');
+        }
+    }
+);
+
+export const deleteBooking = createAsyncThunk(
+    'bookings/deleteBooking',
+    async (id, { rejectWithValue }) => {
+        try {
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                return rejectWithValue('No auth token found');
+            }
+
+            const { data } = await http.delete(`/bookings/${id}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            return id; // Return the id to remove it from state
+        } catch (error) {
+            if (error.response?.status === 401) {
+                localStorage.clear();
+                return rejectWithValue('Session expired');
+            }
+            return rejectWithValue(error.response?.data?.message || 'Failed to delete booking');
         }
     }
 );
@@ -56,7 +120,13 @@ const bookingsSlice = createSlice({
         loading: false,
         error: null
     },
-    reducers: {},
+    reducers: {
+        clearBookings: (state) => {
+            state.items = [];
+            state.loading = false;
+            state.error = null;
+        }
+    },
     extraReducers: (builder) => {
         builder
             .addCase(fetchMyBookings.pending, (state) => {
@@ -69,7 +139,8 @@ const bookingsSlice = createSlice({
             })
             .addCase(fetchMyBookings.rejected, (state, action) => {
                 state.loading = false;
-                state.error = action.error.message;
+                state.error = action.payload;
+                state.items = [];
             })
             .addCase(fetchTutorBookings.pending, (state) => {
                 state.loading = true;
@@ -81,7 +152,8 @@ const bookingsSlice = createSlice({
             })
             .addCase(fetchTutorBookings.rejected, (state, action) => {
                 state.loading = false;
-                state.error = action.error.message;
+                state.error = action.payload;
+                state.items = [];
             })
             .addCase(createBooking.fulfilled, (state, action) => {
                 state.items.push(action.payload);
@@ -91,8 +163,13 @@ const bookingsSlice = createSlice({
                 if (index !== -1) {
                     state.items[index] = action.payload;
                 }
+            })
+            .addCase(deleteBooking.fulfilled, (state, action) => {
+                // Remove the deleted booking from state
+                state.items = state.items.filter(item => item.id !== action.payload);
             });
     }
 });
 
+export const { clearBookings } = bookingsSlice.actions;
 export default bookingsSlice.reducer;

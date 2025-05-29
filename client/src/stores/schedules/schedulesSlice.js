@@ -5,10 +5,23 @@ export const fetchTutorSchedules = createAsyncThunk(
     'schedules/fetchTutorSchedules',
     async (_, { rejectWithValue }) => {
         try {
-            const { data } = await http.get('/schedules');
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                return rejectWithValue('No auth token found');
+            }
+
+            const { data } = await http.get('/schedules', {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
             return Array.isArray(data.data) ? data.data : [];
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Failed to fetch tutor schedules');
+            if (error.response?.status === 401) {
+                localStorage.clear();
+                return rejectWithValue('Session expired');
+            }
+            return rejectWithValue(error.response?.data?.message || 'Failed to fetch schedules');
         }
     }
 );
@@ -17,9 +30,22 @@ export const fetchMySchedules = createAsyncThunk(
     'schedules/fetchMySchedules',
     async (_, { rejectWithValue }) => {
         try {
-            const { data } = await http.get('/schedules');
-            return Array.isArray(data.data) ? data.data : [];
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                return rejectWithValue('No auth token found');
+            }
+
+            const { data } = await http.get('/schedules', {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            return data.data;
         } catch (error) {
+            if (error.response?.status === 401) {
+                localStorage.clear();
+                return rejectWithValue('Session expired');
+            }
             return rejectWithValue(error.response?.data?.message || 'Failed to fetch schedules');
         }
     }
@@ -29,9 +55,22 @@ export const createSchedule = createAsyncThunk(
     'schedules/createSchedule',
     async (scheduleData, { rejectWithValue }) => {
         try {
-            const { data } = await http.post('/schedules', scheduleData);
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                return rejectWithValue('No auth token found');
+            }
+
+            const { data } = await http.post('/schedules', scheduleData, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
             return data.data;
         } catch (error) {
+            if (error.response?.status === 401) {
+                localStorage.clear();
+                return rejectWithValue('Session expired');
+            }
             return rejectWithValue(error.response?.data?.message || 'Failed to create schedule');
         }
     }
@@ -41,9 +80,22 @@ export const updateSchedule = createAsyncThunk(
     'schedules/updateSchedule',
     async ({ id, scheduleData }, { rejectWithValue }) => {
         try {
-            const { data } = await http.put(`/schedules/${id}`, scheduleData);
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                return rejectWithValue('No auth token found');
+            }
+
+            const { data } = await http.put(`/schedules/${id}`, scheduleData, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
             return data.data;
         } catch (error) {
+            if (error.response?.status === 401) {
+                localStorage.clear();
+                return rejectWithValue('Session expired');
+            }
             return rejectWithValue(error.response?.data?.message || 'Failed to update schedule');
         }
     }
@@ -53,9 +105,22 @@ export const deleteSchedule = createAsyncThunk(
     'schedules/deleteSchedule',
     async (id, { rejectWithValue }) => {
         try {
-            await http.delete(`/schedules/${id}`);
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                return rejectWithValue('No auth token found');
+            }
+
+            await http.delete(`/schedules/${id}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
             return id;
         } catch (error) {
+            if (error.response?.status === 401) {
+                localStorage.clear();
+                return rejectWithValue('Session expired');
+            }
             return rejectWithValue(error.response?.data?.message || 'Failed to delete schedule');
         }
     }

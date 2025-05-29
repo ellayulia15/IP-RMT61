@@ -4,7 +4,8 @@ const { Booking, Schedule, User, Tutor } = require('../models');
 class PaymentController {
     static async createPayment(req, res, next) {
         try {
-            const booking = await Booking.findByPk(req.params.bookingId, {                include: [
+            const booking = await Booking.findByPk(req.params.bookingId, {
+                include: [
                     {
                         model: Schedule,
                         include: [{

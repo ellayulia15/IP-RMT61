@@ -140,10 +140,17 @@ class BookingController {
                 throw { name: 'BadRequest', message: 'Can only update pending bookings' };
             }
 
-            // Update booking status
-            const updatedBooking = await booking.update({
+            // Update booking status and payment status if rejected
+            const updates = {
                 bookingStatus: status
-            });
+            };
+
+            // If booking is rejected, also cancel the payment
+            if (status === 'Rejected') {
+                updates.paymentStatus = 'cancelled';
+            }
+
+            const updatedBooking = await booking.update(updates);
 
             res.json({
                 message: 'Booking status updated successfully',

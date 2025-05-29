@@ -15,24 +15,27 @@ export const fetchTutors = createAsyncThunk(
 
 export const fetchTutorDetail = createAsyncThunk(
     'tutors/fetchTutorDetail',
-    async (id, { rejectWithValue, dispatch }) => {
+    async (id, { rejectWithValue }) => {
         try {
             const { data } = await http.get(`/pub/tutors/${id}`);
             if (!data.data) {
                 return rejectWithValue('Tutor not found');
             }
-            const { Schedules, ...tutorData } = data.data;
-            
-            // Sort schedules by date
-            const sortedSchedules = Schedules ? [...Schedules].sort((a, b) => new Date(a.date) - new Date(b.date)) : [];
 
-            // Update schedules in the schedules slice
-            dispatch({
-                type: 'schedules/setSchedules',
-                payload: sortedSchedules
-            });
+            // Sort schedules by date if they exist
+            if (data.data.Schedules) {
+                data.data.Schedules = data.data.Schedules
+                    .filter(schedule => new Date(schedule.date) >= new Date())
+                    .sort((a, b) => new Date(a.date) - new Date(b.date))
+                    .map(schedule => ({
+                        ...schedule,
+                        date: new Date(schedule.date).toISOString().split('T')[0],
+                        startTime: schedule.startTime?.includes('T') ? schedule.startTime.split('T')[1] : schedule.startTime,
+                        endTime: schedule.endTime?.includes('T') ? schedule.endTime.split('T')[1] : schedule.endTime
+                    }));
+            }
 
-            return tutorData;
+            return data.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || 'Failed to fetch tutor details');
         }

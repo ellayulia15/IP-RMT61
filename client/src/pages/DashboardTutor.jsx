@@ -4,15 +4,13 @@ import { useDispatch, useSelector } from 'react-redux';
 import Swal from 'sweetalert2';
 import { fetchTutorProfile } from '../stores/tutorProfile/tutorProfileSlice';
 import { fetchTutorBookings } from '../stores/bookings/bookingsSlice';
-import { fetchTutorSchedules } from '../stores/schedules/schedulesSlice';
 
 export default function DashboardTutor() {
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    const { profile: tutorProfile, loading: profileLoading, error: profileError } = useSelector(state => state.tutorProfile);
-    const { items: bookings, loading: bookingsLoading, error: bookingsError } = useSelector(state => state.bookings);
-    const { items: schedules, loading: schedulesLoading, error: schedulesError } = useSelector(state => state.schedules);
-    
+    const { profile: tutorProfile, loading: profileLoading } = useSelector(state => state.tutorProfile);
+    const { items: bookings, loading: bookingsLoading } = useSelector(state => state.bookings);
+
     useEffect(() => {
         const token = localStorage.getItem('access_token');
         if (!token) {
@@ -22,10 +20,9 @@ export default function DashboardTutor() {
 
         Promise.all([
             dispatch(fetchTutorProfile()).unwrap(),
-            dispatch(fetchTutorBookings()).unwrap(),
-            dispatch(fetchTutorSchedules()).unwrap()
+            dispatch(fetchTutorBookings()).unwrap()
         ]).catch((error) => {
-            if (error.status === 401) {
+            if (error.response?.status === 401) {
                 Swal.fire({
                     icon: 'warning',
                     title: 'Session Expired',
@@ -41,37 +38,17 @@ export default function DashboardTutor() {
                 });
             }
         });
-    }, [navigate, dispatch]);
+    }, [dispatch, navigate]);
 
     const handleCreateProfile = () => {
         navigate('/tutor/create-profile');
     };
 
-    if (profileLoading || bookingsLoading || schedulesLoading) {
+    if (profileLoading || bookingsLoading) {
         return (
             <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light">
                 <div className="spinner-border text-primary" role="status">
                     <span className="visually-hidden">Loading...</span>
-                </div>
-            </div>
-        );
-    }
-
-    if (profileError || bookingsError || schedulesError) {
-        return (
-            <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light">
-                <div className="text-center">
-                    <div className="text-danger mb-3">
-                        <i className="bi bi-exclamation-triangle display-4"></i>
-                    </div>
-                    <h3>Error Loading Dashboard</h3>
-                    <p className="text-muted">{profileError || bookingsError || schedulesError}</p>
-                    <button 
-                        className="btn btn-primary" 
-                        onClick={() => window.location.reload()}
-                    >
-                        Retry
-                    </button>
                 </div>
             </div>
         );
@@ -152,7 +129,7 @@ export default function DashboardTutor() {
                                                 </div>
                                                 <div className="ms-3">
                                                     <h3 className="h6 mb-1">Total Schedules</h3>
-                                                    <h4 className="h3 mb-0">{schedules.length || 0}</h4>
+                                                    <h4 className="h3 mb-0">{tutorProfile.totalSchedules}</h4>
                                                 </div>
                                             </div>
                                             <Link to="/tutor/schedules" className="btn btn-light w-100">

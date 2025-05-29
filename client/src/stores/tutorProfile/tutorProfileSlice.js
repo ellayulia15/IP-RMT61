@@ -5,9 +5,27 @@ export const fetchTutorProfile = createAsyncThunk(
     'tutorProfile/fetchTutorProfile',
     async (_, { rejectWithValue }) => {
         try {
-            const { data } = await http.get('/tutors');
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                return rejectWithValue('No auth token found');
+            }
+
+            const { data } = await http.get('/tutors', {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            if (!data.data) {
+                return rejectWithValue('Profile not found');
+            }
+
             return data.data;
         } catch (error) {
+            if (error.response?.status === 401) {
+                localStorage.clear();
+                return rejectWithValue('Session expired');
+            }
             return rejectWithValue(error.response?.data?.message || 'Failed to fetch tutor profile');
         }
     }
@@ -39,7 +57,8 @@ const tutorProfileSlice = createSlice({
             })
             .addCase(fetchTutorProfile.rejected, (state, action) => {
                 state.loading = false;
-                state.error = action.error.message;
+                state.error = action.payload;
+                state.profile = null;
             });
     }
 });

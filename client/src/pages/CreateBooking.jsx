@@ -3,20 +3,18 @@ import { useNavigate, useParams, Link } from 'react-router';
 import Swal from 'sweetalert2';
 import http from '../lib/http';
 
-export default function CreateBooking() {
-    const { scheduleId } = useParams();
+export default function CreateBooking() {    const { id } = useParams(); // Changed from scheduleId to match route parameter
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [schedule, setSchedule] = useState(null);
     const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
-        fetchSchedule();
-    }, [scheduleId]);
+        fetchSchedule();    }, [id]);
 
     const fetchSchedule = async () => {
         try {
-            const { data } = await http.get(`/schedules/${scheduleId}`, {
+            const { data } = await http.get(`/schedules/${id}`, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('access_token')}`
                 }
@@ -26,12 +24,12 @@ export default function CreateBooking() {
         } catch (err) {
             if (err.response?.status === 401) {
                 localStorage.clear();
-                navigate('/login');
-            } else {
+                navigate('/login');            } else {
+                const errorMessage = err.response?.data?.message || 'Failed to load schedule details';
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: 'Failed to load schedule details',
+                    text: errorMessage,
                     confirmButtonColor: '#4A90E2'
                 });
                 navigate('/tutors');
