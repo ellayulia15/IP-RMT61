@@ -1,6 +1,4 @@
 import { useState } from 'react';
-import { Link } from 'react-router';
-import '../styles/home.css';
 import http from '../lib/http';
 
 export default function Home() {
@@ -39,37 +37,11 @@ export default function Home() {
 
     return (
         <div className="min-vh-100 bg-light">
-            {/* Header */}
-            <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-                <div className="container">
-                    <Link to="/" className="navbar-brand d-flex align-items-center">
-                        <img src="/logo.png" alt="TutorHub" height="32" className="me-2" />
-                        <span className="h4 mb-0 text-primary">TutorHub</span>
-                    </Link>
-                    <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                        <span className="navbar-toggler-icon"></span>
-                    </button>
-                    <div className="collapse navbar-collapse" id="navbarNav">
-                        <ul className="navbar-nav ms-auto">
-                            <li className="nav-item">
-                                <Link to="/" className="nav-link">Home</Link>
-                            </li>
-                            <li className="nav-item">
-                                <Link to="/tutors" className="nav-link">Tutors</Link>
-                            </li>
-                            <li className="nav-item">
-                                <Link to="/login" className="btn btn-primary">Login</Link>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </nav>
-
             {/* Hero Section */}
             <div className="container py-5">
                 <div className="text-center mb-5">
                     <h1 className="display-4 fw-bold mb-3">
-                        Find Your Perfect Tutor and AI-Powered Tutoring Matches
+                        Find Your Perfect Tutor in TutorHub
                     </h1>
                     <p className="lead text-muted mb-4">
                         Connect with expert tutors who can help you achieve your learning goals. Our advanced AI system analyzes your learning style and goals to find the perfect tutor match for you.

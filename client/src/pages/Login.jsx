@@ -5,7 +5,8 @@ import Swal from 'sweetalert2';
 import http from '../lib/http';
 
 export default function Login() {
-    const navigate = useNavigate(); const [formData, setFormData] = useState({
+    const navigate = useNavigate();
+    const [formData, setFormData] = useState({
         email: '',
         password: '',
         role: 'Student' // Default role
@@ -65,8 +66,7 @@ export default function Login() {
         });
     }; const handleSubmit = async (e) => {
         e.preventDefault();
-        try {
-            console.log('Submitting form with data:', formData);
+        try {            console.log('Submitting form with data:', formData);
             const { data } = await http.post('/login', formData);
             localStorage.setItem('access_token', data.data.access_token);
             localStorage.setItem('user_role', data.data.role);
@@ -81,10 +81,10 @@ export default function Login() {
             });
 
             // Redirect based on role
-            if (data.data.role === 'Tutor') {
-                navigate('/tutor/dashboard');
+            if (formData.role === 'Student') {
+                navigate('/');
             } else {
-                navigate('/student/bookings');
+                navigate('/tutor/dashboard');
             }
         } catch (err) {
             Swal.fire({
@@ -179,17 +179,16 @@ export default function Login() {
                                         <span className="position-absolute top-50 start-50 translate-middle bg-white px-3 text-muted">
                                             or
                                         </span>
-                                    </div>
-
-                                    <div className="mb-3">
-                                        <GoogleLogin
-                                            onSuccess={handleGoogleSuccess}
-                                            onError={handleGoogleError}
-                                            theme="outline"
-                                            size="large"
-                                            width="100%"
-                                            text="continue_with"
-                                        />
+                                    </div>                                    <div className="mb-3 d-flex justify-content-center">
+                                        <div style={{ width: '100%', maxWidth: '320px' }}>
+                                            <GoogleLogin
+                                                onSuccess={handleGoogleSuccess}
+                                                onError={handleGoogleError}
+                                                theme="outline"
+                                                size="large"
+                                                text="continue_with"
+                                            />
+                                        </div>
                                     </div>
 
                                     <p className="text-center mb-0">

@@ -1,132 +1,82 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router";
-import Home from "./pages/Home";
-import Tutors from "./pages/Tutors";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import DashboardTutor from "./pages/DashboardTutor";
-import CreateProfile from "./pages/CreateProfile";
-import EditProfile from "./pages/EditProfile";
-import Schedule from "./pages/Schedule";
-import AddSchedule from "./pages/AddSchedule";
-import UpdateSchedule from "./pages/UpdateSchedule";
-import Detail from "./pages/Detail";
-import CreateBooking from "./pages/CreateBooking";
-import StudentBookings from "./pages/StudentBookings";
-import TutorBookings from "./pages/TutorBookings";
+import { BrowserRouter, Routes, Route, Outlet, Navigate } from 'react-router';
+import Navbar from './components/Navbar';
+import Footer from './components/Footer';
+import Home from './pages/Home';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Tutors from './pages/Tutors';
+import StudentBookings from './pages/StudentBookings';
+import TutorBookings from './pages/TutorBookings';
+import Schedule from './pages/Schedule';
+import DashboardTutor from './pages/DashboardTutor';
+import Detail from './pages/Detail';
+import CreateBooking from './pages/CreateBooking';
+import CreateProfile from './pages/CreateProfile';
+import EditProfile from './pages/EditProfile';
+import AddSchedule from './pages/AddSchedule';
+import UpdateSchedule from './pages/UpdateSchedule';
 
-// Auth protection component
-function RequireAuth({ children }) {
+function PublicLayout() {
+  return (
+    <div className="min-vh-100 d-flex flex-column">
+      <Navbar />
+      <main className="flex-grow-1">
+        <div className="container pb-3">
+          <Outlet />
+        </div>
+      </main>
+      <Footer />
+    </div>
+  );
+}
+
+function ProtectedLayout() {
   const token = localStorage.getItem('access_token');
+
   if (!token) {
     return <Navigate to="/login" replace />;
   }
-  return children;
+
+  return (
+    <div className="min-vh-100 d-flex flex-column">
+      <Navbar />
+      <main className="flex-grow-1">
+        <div className="container pb-3">
+          <Outlet />
+        </div>
+      </main>
+      <Footer />
+    </div>
+  );
 }
 
-// Role protection component
-function RequireTutor({ children }) {
-  const role = localStorage.getItem('user_role');
-  if (role !== 'Tutor') {
-    return <Navigate to="/" replace />;
-  }
-  return children;
-}
-
-// Student role protection component
-function RequireStudent({ children }) {
-  const role = localStorage.getItem('user_role');
-  if (role !== 'Student') {
-    return <Navigate to="/" replace />;
-  }
-  return children;
-}
-
-function App() {
+export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<Home />} />
-        <Route path="/tutors" element={<Tutors />} />
-        <Route path="/tutors/:id" element={<Detail />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-
-        {/* Protected Student Routes */}
-        <Route path="/student">
-          <Route path="bookings" element={
-            <RequireAuth>
-              <RequireStudent>
-                <StudentBookings />
-              </RequireStudent>
-            </RequireAuth>
-          } />
+        <Route element={<PublicLayout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/tutors" element={<Tutors />} />
+          <Route path="/tutors/:id" element={<Detail />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
         </Route>
 
-        {/* Protected Booking Routes */}
-        <Route path="/bookings/create/:scheduleId" element={
-          <RequireAuth>
-            <RequireStudent>
-              <CreateBooking />
-            </RequireStudent>
-          </RequireAuth>
-        } />
+        <Route element={<ProtectedLayout />}>
+          {/* Student Routes */}
+          <Route path="/student/bookings" element={<StudentBookings />} />
+          <Route path="/bookings/create/:id" element={<CreateBooking />} />
 
-        {/* Protected Tutor Routes */}
-        <Route path="/tutor">
-          <Route path="dashboard" element={
-            <RequireAuth>
-              <RequireTutor>
-                <DashboardTutor />
-              </RequireTutor>
-            </RequireAuth>
-          } />
-          <Route path="bookings" element={
-            <RequireAuth>
-              <RequireTutor>
-                <TutorBookings />
-              </RequireTutor>
-            </RequireAuth>
-          } />
-          <Route path="create-profile" element={
-            <RequireAuth>
-              <RequireTutor>
-                <CreateProfile />
-              </RequireTutor>
-            </RequireAuth>
-          } />
-          <Route path="edit-profile" element={
-            <RequireAuth>
-              <RequireTutor>
-                <EditProfile />
-              </RequireTutor>
-            </RequireAuth>
-          } />
-          <Route path="schedules" element={
-            <RequireAuth>
-              <RequireTutor>
-                <Schedule />
-              </RequireTutor>
-            </RequireAuth>
-          } />
-          <Route path="schedules/add" element={
-            <RequireAuth>
-              <RequireTutor>
-                <AddSchedule />
-              </RequireTutor>
-            </RequireAuth>
-          } />
-          <Route path="schedules/edit/:id" element={
-            <RequireAuth>
-              <RequireTutor>
-                <UpdateSchedule />
-              </RequireTutor>
-            </RequireAuth>
-          } />
+          {/* Tutor Routes */}
+          <Route path="/tutor/dashboard" element={<DashboardTutor />} />
+          <Route path="/tutor/create-profile" element={<CreateProfile />} />
+          <Route path="/tutor/edit-profile" element={<EditProfile />} />
+          <Route path="/tutor/bookings" element={<TutorBookings />} />
+          <Route path="/tutor/schedules" element={<Schedule />} />
+          <Route path="/tutor/schedules/add" element={<AddSchedule />} />
+          <Route path="/tutor/schedules/edit/:id" element={<UpdateSchedule />} />
         </Route>
       </Routes>
     </BrowserRouter>
-  )
+  );
 }
-
-export default App

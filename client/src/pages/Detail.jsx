@@ -1,34 +1,60 @@
-import { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router';
+import { useEffect } from 'react';
+import { Link, useParams, useNavigate } from 'react-router';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchTutorDetail } from '../stores/tutors/tutorsSlice';
+import { clearSchedules } from '../stores/schedules/schedulesSlice';
 import Swal from 'sweetalert2';
-import http from '../lib/http';
 
 export default function Detail() {
     const { id } = useParams();
-    const [tutor, setTutor] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
+    const dispatch = useDispatch();
+    const { currentTutor: tutor, loading: tutorLoading, error: tutorError } = useSelector(state => state.tutors);
+    const { items: schedules = [], loading: schedulesLoading } = useSelector(state => state.schedules);
 
     useEffect(() => {
-        fetchTutor();
-    }, [id]);
-
-    const fetchTutor = async () => {
-        try {
-            const { data } = await http.get(`/pub/tutors/${id}`);
-            setTutor(data.data);
-            setLoading(false);
-        } catch (err) {
-            setLoading(false);
-            Swal.fire({
-                icon: 'error',
-                title: 'Oops...',
-                text: 'Failed to load tutor details. Please try again later.',
-                confirmButtonColor: '#4A90E2'
+        dispatch(fetchTutorDetail(id))
+            .unwrap()
+            .catch((error) => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: error || 'Failed to load tutor details. Please try again later.',
+                    confirmButtonColor: '#4A90E2'
+                });
             });
+
+        // Cleanup on unmount
+        return () => {
+            dispatch(clearSchedules());
+        };
+    }, [dispatch, id]);
+
+    const handleBookClick = (scheduleId) => {
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            Swal.fire({
+                title: 'Login Required',
+                text: 'Please login or register first as student to book a tutor',
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonText: 'Login',
+                cancelButtonText: 'Register',
+                confirmButtonColor: '#4A90E2',
+                cancelButtonColor: '#3EC59D'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    navigate('/login');
+                } else if (result.dismiss === Swal.DismissReason.cancel) {
+                    navigate('/register');
+                }
+            });
+            return;
         }
+        navigate(`/bookings/create/${scheduleId}`);
     };
 
-    if (loading) {
+    if (tutorLoading || schedulesLoading) {
         return (
             <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light">
                 <div className="spinner-border text-primary" role="status">
@@ -38,17 +64,26 @@ export default function Detail() {
         );
     }
 
+    if (tutorError) {
+        return (
+            <div className="min-vh-100 bg-light">
+                <div className="container py-5 text-center">
+                    <div className="text-danger mb-3">
+                        <i className="bi bi-exclamation-triangle display-4"></i>
+                    </div>
+                    <h2>Error Loading Tutor</h2>
+                    <p className="text-muted">{tutorError}</p>
+                    <Link to="/tutors" className="btn btn-primary mt-3">
+                        Back to Tutors
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
     if (!tutor) {
         return (
             <div className="min-vh-100 bg-light">
-                <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-                    <div className="container">
-                        <Link to="/" className="navbar-brand d-flex align-items-center">
-                            <img src="/logo.png" alt="TutorHub" height="32" className="me-2" />
-                            <span className="h4 mb-0 text-primary">TutorHub</span>
-                        </Link>
-                    </div>
-                </nav>
                 <div className="container py-5 text-center">
                     <h2>Tutor Not Found</h2>
                     <Link to="/tutors" className="btn btn-primary mt-3">
@@ -61,31 +96,6 @@ export default function Detail() {
 
     return (
         <div className="min-vh-100 bg-light">
-            <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-                <div className="container">
-                    <Link to="/" className="navbar-brand d-flex align-items-center">
-                        <img src="/logo.png" alt="TutorHub" height="32" className="me-2" />
-                        <span className="h4 mb-0 text-primary">TutorHub</span>
-                    </Link>
-                    <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                        <span className="navbar-toggler-icon"></span>
-                    </button>
-                    <div className="collapse navbar-collapse" id="navbarNav">
-                        <ul className="navbar-nav ms-auto">
-                            <li className="nav-item">
-                                <Link to="/" className="nav-link">Home</Link>
-                            </li>
-                            <li className="nav-item">
-                                <Link to="/tutors" className="nav-link active">Tutors</Link>
-                            </li>
-                            <li className="nav-item">
-                                <Link to="/login" className="btn btn-primary">Login</Link>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </nav>
-
             <div className="container py-5">
                 <div className="row">
                     {/* Tutor Profile Card */}
@@ -101,9 +111,6 @@ export default function Detail() {
                                     />
                                     <h2 className="h4 mb-1">{tutor.User?.fullName}</h2>
                                     <p className="text-muted mb-3">{tutor.subjects}</p>
-                                    <Link to="/login" className="btn btn-primary w-100">
-                                        Book a Session
-                                    </Link>
                                 </div>
                                 <hr />
                                 <div className="mb-0">
@@ -114,55 +121,56 @@ export default function Detail() {
                         </div>
                     </div>
 
-                    {/* Available Schedules */}
+                    {/* Schedules */}
                     <div className="col-lg-8">
                         <div className="card border-0 shadow-sm">
                             <div className="card-body p-4">
-                                <h3 className="h5 mb-4">Available Teaching Schedules</h3>
-
-                                {tutor.Schedules?.length === 0 ? (
-                                    <p className="text-muted">No available schedules at the moment.</p>
+                                <h3 className="h5 mb-4">Available Schedules</h3>
+                                {schedules.length === 0 ? (
+                                    <div className="text-center py-4">
+                                        <div className="text-muted mb-3">
+                                            <i className="bi bi-calendar-x display-4"></i>
+                                        </div>
+                                        <p className="mb-0">No schedules available at the moment.</p>
+                                    </div>
                                 ) : (
-                                    <div className="table-responsive">
-                                        <table className="table table-hover">
-                                            <thead>
-                                                <tr>
-                                                    <th>Date</th>
-                                                    <th>Time</th>
-                                                    <th>Fee</th>
-                                                    <th></th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {tutor.Schedules?.map((schedule) => (
-                                                    <tr key={schedule.id}>
-                                                        <td>
-                                                            {new Date(schedule.date).toLocaleDateString('en-US', {
-                                                                weekday: 'long',
-                                                                year: 'numeric',
-                                                                month: 'long',
-                                                                day: 'numeric'
-                                                            })}
-                                                        </td>
-                                                        <td>{schedule.time}</td>
-                                                        <td>
-                                                            <i className="bi bi-currency-exchange me-1"></i>
-                                                            {Number(schedule.fee).toLocaleString('id-ID', {
-                                                                style: 'currency',
-                                                                currency: 'IDR'
-                                                            })}
-                                                        </td>                                                        <td className="text-end">
-                                                            <Link
-                                                                to={localStorage.getItem('access_token') ? `/bookings/create/${schedule.id}` : '/login'}
-                                                                className="btn btn-sm btn-outline-primary"
+                                    <div className="row g-4">
+                                        {schedules.map((schedule) => (
+                                            <div key={schedule.id} className="col-md-6">
+                                                <div className="card h-100 border-0 shadow-sm">
+                                                    <div className="card-body p-4">
+                                                        <div className="d-flex justify-content-between align-items-center mb-3">
+                                                            <div>
+                                                                <h4 className="h6 mb-1">
+                                                                    {new Date(schedule.date).toLocaleDateString('en-US', {
+                                                                        weekday: 'long',
+                                                                        year: 'numeric',
+                                                                        month: 'long',
+                                                                        day: 'numeric'
+                                                                    })}
+                                                                </h4>
+                                                                <p className="text-muted small mb-0">
+                                                                    {new Date(`2000-01-01T${schedule.startTime}`).toLocaleTimeString('en-US', {
+                                                                        hour: 'numeric',
+                                                                        minute: 'numeric'
+                                                                    })} - {new Date(`2000-01-01T${schedule.endTime}`).toLocaleTimeString('en-US', {
+                                                                        hour: 'numeric',
+                                                                        minute: 'numeric'
+                                                                    })}
+                                                                </p>
+                                                            </div>
+                                                            <button
+                                                                onClick={() => handleBookClick(schedule.id)}
+                                                                className="btn btn-outline-primary btn-sm"
+                                                                disabled={schedule.isBooked}
                                                             >
-                                                                Book Now
-                                                            </Link>
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
+                                                                {schedule.isBooked ? 'Booked' : 'Book Now'}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
                                 )}
                             </div>

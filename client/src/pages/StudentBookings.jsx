@@ -1,132 +1,48 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router';
+import { useDispatch, useSelector } from 'react-redux';
 import Swal from 'sweetalert2';
-import http from '../lib/http';
+import { fetchMyBookings } from '../stores/bookings/bookingsSlice';
 
 export default function StudentBookings() {
     const navigate = useNavigate();
-    const [bookings, setBookings] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const dispatch = useDispatch();
+    const { items: bookings, loading } = useSelector(state => state.bookings);
 
     useEffect(() => {
-        fetchBookings();
-    }, []);
-
-    const fetchBookings = async () => {
-        try {
-            const { data } = await http.get('/bookings', {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('access_token')}`
-                }
+        dispatch(fetchMyBookings()).unwrap()
+            .catch(() => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Failed to load bookings. Please try again later.',
+                    confirmButtonColor: '#4A90E2'
+                });
             });
-            setBookings(data.data);
-            setLoading(false);
-        } catch (err) {
-            if (err.response?.status === 401) {
-                localStorage.clear();
-                navigate('/login');
-            }
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Failed to load bookings',
-                confirmButtonColor: '#4A90E2'
-            });
-        }
-    };
+    }, [dispatch]);
 
     const handleCancelBooking = async (id) => {
         try {
-            await Swal.fire({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, cancel it!'
-            }).then(async (result) => {
-                if (result.isConfirmed) {
-                    await http.delete(`/bookings/${id}`, {
-                        headers: {
-                            Authorization: `Bearer ${localStorage.getItem('access_token')}`
-                        }
-                    });
-                    Swal.fire(
-                        'Cancelled!',
-                        'Your booking has been cancelled.',
-                        'success'
-                    );
-                    fetchBookings();
-                }
+            await dispatch(updateBookingStatus({ id, status: 'cancelled' })).unwrap();
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: 'Booking cancelled successfully',
+                confirmButtonColor: '#4A90E2'
             });
-        } catch (err) {
+        } catch (error) {
             Swal.fire({
                 icon: 'error',
-                title: 'Error',
-                text: err.response?.data?.message || 'Failed to cancel booking',
+                title: 'Oops...',
+                text: 'Failed to cancel booking',
                 confirmButtonColor: '#4A90E2'
             });
         }
-    }; const handlePayment = async (bookingId) => {
-        try {
-            console.log('Initiating payment for booking:', bookingId);
-            const { data } = await http.post(`/payments/${bookingId}`, {}, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('access_token')}`
-                }
-            });
-            console.log('Payment token received:', data); window.snap.pay(data.paymentToken, {
-                onSuccess: function (result) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Pembayaran Berhasil!',
-                        text: 'Terima kasih atas pembayaran Anda',
-                        confirmButtonColor: '#4A90E2'
-                    });
-                    fetchBookings();
-                },
-                onPending: function (result) {
-                    Swal.fire({
-                        icon: 'info',
-                        title: 'Pembayaran Pending',
-                        text: 'Silakan selesaikan pembayaran Anda',
-                        confirmButtonColor: '#4A90E2'
-                    });
-                    fetchBookings();
-                },
-                onError: function (result) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Pembayaran Gagal',
-                        text: 'Mohon coba lagi atau pilih metode pembayaran lain',
-                        confirmButtonColor: '#4A90E2'
-                    });
-                },
-                onClose: function () {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Pembayaran Dibatalkan',
-                        text: 'Anda dapat mencoba pembayaran lagi nanti',
-                        confirmButtonColor: '#4A90E2'
-                    });
-                }
-            });
-        } catch (err) {
-            console.log(err, '<<< error payment');
-
-            Swal.fire('Error', 'Failed to initiate payment', 'error');
-        }
-    };
-
-    const handleLogout = () => {
-        localStorage.clear();
-        navigate('/login');
     };
 
     if (loading) {
         return (
-            <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light">
+            <div className="d-flex justify-content-center py-5">
                 <div className="spinner-border text-primary" role="status">
                     <span className="visually-hidden">Loading...</span>
                 </div>
@@ -136,30 +52,6 @@ export default function StudentBookings() {
 
     return (
         <div className="min-vh-100 bg-light">
-            <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-                <div className="container">
-                    <Link to="/" className="navbar-brand d-flex align-items-center">
-                        <img src="/logo.png" alt="TutorHub" height="32" className="me-2" />
-                        <span className="h4 mb-0 text-primary">TutorHub</span>
-                    </Link>
-                    <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                        <span className="navbar-toggler-icon"></span>
-                    </button>
-                    <div className="collapse navbar-collapse" id="navbarNav">
-                        <ul className="navbar-nav ms-auto">
-                            <li className="nav-item">
-                                <Link to="/tutors" className="nav-link">Find Tutors</Link>
-                            </li>
-                            <li className="nav-item">
-                                <button onClick={handleLogout} className="btn btn-outline-primary">
-                                    Logout
-                                </button>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </nav>
-
             <div className="container py-5">
                 <div className="d-flex justify-content-between align-items-center mb-4">
                     <h1 className="h3 mb-0">My Bookings</h1>

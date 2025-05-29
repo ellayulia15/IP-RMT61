@@ -1,72 +1,40 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router';
+import { useDispatch, useSelector } from 'react-redux';
 import Swal from 'sweetalert2';
-import http from '../lib/http';
+import { fetchTutorBookings, updateBookingStatus } from '../stores/bookings/bookingsSlice';
 
 export default function TutorBookings() {
     const navigate = useNavigate();
-    const [bookings, setBookings] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const dispatch = useDispatch();
+    const { items: bookings, loading } = useSelector(state => state.bookings);
 
     useEffect(() => {
-        fetchBookings();
-    }, []);
-
-    const fetchBookings = async () => {
-        try {
-            const { data } = await http.get('/bookings', {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('access_token')}`
-                }
+        dispatch(fetchTutorBookings()).unwrap()
+            .catch(() => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Failed to load bookings. Please try again later.',
+                    confirmButtonColor: '#4A90E2'
+                });
             });
-            setBookings(data.data);
-            setLoading(false);
-        } catch (err) {
-            if (err.response?.status === 401) {
-                localStorage.clear();
-                navigate('/login');
-            }
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Failed to load bookings',
-                confirmButtonColor: '#4A90E2'
-            });
-        }
-    };
+    }, [dispatch]);
 
     const handleUpdateStatus = async (id, status) => {
         try {
-            await Swal.fire({
-                title: `Are you sure you want to ${status.toLowerCase()} this booking?`,
-                text: "You won't be able to revert this!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: status === 'Approved' ? '#28a745' : '#dc3545',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: status === 'Approved' ? 'Yes, approve it!' : 'Yes, reject it!'
-            }).then(async (result) => {
-                if (result.isConfirmed) {
-                    await http.patch(`/bookings/${id}/status`, {
-                        status
-                    }, {
-                        headers: {
-                            Authorization: `Bearer ${localStorage.getItem('access_token')}`
-                        }
-                    });
-                    Swal.fire(
-                        `${status}!`,
-                        `Booking has been ${status.toLowerCase()}.`,
-                        'success'
-                    );
-                    fetchBookings();
-                }
+            await dispatch(updateBookingStatus({ id, status })).unwrap();
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: 'Booking status updated successfully',
+                confirmButtonColor: '#4A90E2'
             });
-        } catch (err) {
+        } catch (error) {
             Swal.fire({
                 icon: 'error',
-                title: 'Error',
-                text: err.response?.data?.message || 'Failed to update booking status',
+                title: 'Oops...',
+                text: 'Failed to update booking status',
                 confirmButtonColor: '#4A90E2'
             });
         }
@@ -89,33 +57,6 @@ export default function TutorBookings() {
 
     return (
         <div className="min-vh-100 bg-light">
-            <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-                <div className="container">
-                    <Link to="/tutor/dashboard" className="navbar-brand d-flex align-items-center">
-                        <img src="/logo.png" alt="TutorHub" height="32" className="me-2" />
-                        <span className="h4 mb-0 text-primary">TutorHub</span>
-                    </Link>
-                    <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                        <span className="navbar-toggler-icon"></span>
-                    </button>
-                    <div className="collapse navbar-collapse" id="navbarNav">
-                        <ul className="navbar-nav ms-auto">
-                            <li className="nav-item">
-                                <Link to="/tutor/schedules" className="nav-link">Schedules</Link>
-                            </li>
-                            <li className="nav-item">
-                                <Link to="/tutor/bookings" className="nav-link active">Bookings</Link>
-                            </li>
-                            <li className="nav-item">
-                                <button onClick={handleLogout} className="btn btn-outline-primary">
-                                    Logout
-                                </button>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </nav>
-
             <div className="container py-5">
                 <div className="d-flex justify-content-between align-items-center mb-4">
                     <h1 className="h3 mb-0">Booking Requests</h1>

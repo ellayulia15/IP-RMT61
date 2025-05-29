@@ -59,15 +59,6 @@ export default function AddSchedule() {
 
     return (
         <div className="min-vh-100 bg-light">
-            <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-                <div className="container">
-                    <Link to="/tutor/dashboard" className="navbar-brand d-flex align-items-center">
-                        <img src="/logo.png" alt="TutorHub" height="32" className="me-2" />
-                        <span className="h4 mb-0 text-primary">TutorHub</span>
-                    </Link>
-                </div>
-            </nav>
-
             <div className="container py-5">
                 <div className="row justify-content-center">
                     <div className="col-md-8">
