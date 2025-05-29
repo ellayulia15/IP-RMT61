@@ -21,22 +21,28 @@ class UserController {
         } catch (err) {
             next(err);
         }
-    }
-
-    static async login(req, res, next) {
+    }    static async login(req, res, next) {
         try {
-            const { email, password } = req.body;
+            const { email, password, role } = req.body;
             if (!email) {
                 throw { name: 'BadRequest', message: 'Email is required' };
             }
             if (!password) {
                 throw { name: 'BadRequest', message: 'Password is required' };
             }
+            if (!role) {
+                throw { name: 'BadRequest', message: 'Role selection is required' };
+            }
 
-            // Check if user exists
-            const user = await User.findOne({ where: { email } });
+            // Check if user exists with correct role
+            const user = await User.findOne({ 
+                where: { 
+                    email,
+                    role 
+                } 
+            });
             if (!user) {
-                throw { name: 'Unauthorized', message: 'Invalid email/password' };
+                throw { name: 'Unauthorized', message: 'Invalid email/password or role' };
             }
 
             // Verify password

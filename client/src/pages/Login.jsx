@@ -9,16 +9,20 @@ export default function Login() {
         email: '',
         password: '',
         role: 'Student' // Default role
-    });
-
-    const handleChange = (e) => {
+    }); const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
+        console.log('Input changed:', { name, value });
+        setFormData(prev => {
+            const newData = {
+                ...prev,
+                [name]: value
+            };
+            console.log('Updated formData:', newData);
+            return newData;
+        });
     }; const handleGoogleSuccess = async (credentialResponse) => {
         try {
+            console.log('Google login with role:', formData.role);
             const { data } = await http.post('/google-login', {
                 credential: credentialResponse.credential,
                 role: formData.role
@@ -41,6 +45,8 @@ export default function Login() {
                 navigate('/student/bookings');
             }
         } catch (err) {
+            console.log(err, '<<<error google login');
+
             Swal.fire({
                 icon: 'error',
                 title: 'Login Failed',
@@ -57,11 +63,10 @@ export default function Login() {
             text: 'Unable to login with Google. Please try again.',
             confirmButtonColor: '#4A90E2'
         });
-    };
-
-    const handleSubmit = async (e) => {
+    }; const handleSubmit = async (e) => {
         e.preventDefault();
         try {
+            console.log('Submitting form with data:', formData);
             const { data } = await http.post('/login', formData);
             localStorage.setItem('access_token', data.data.access_token);
             localStorage.setItem('user_role', data.data.role);
