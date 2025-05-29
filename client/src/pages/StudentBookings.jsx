@@ -68,6 +68,55 @@ export default function StudentBookings() {
                 confirmButtonColor: '#4A90E2'
             });
         }
+    }; const handlePayment = async (bookingId) => {
+        try {
+            console.log('Initiating payment for booking:', bookingId);
+            const { data } = await http.post(`/payments/${bookingId}`, {}, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('access_token')}`
+                }
+            });
+            console.log('Payment token received:', data); window.snap.pay(data.paymentToken, {
+                onSuccess: function (result) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Pembayaran Berhasil!',
+                        text: 'Terima kasih atas pembayaran Anda',
+                        confirmButtonColor: '#4A90E2'
+                    });
+                    fetchBookings();
+                },
+                onPending: function (result) {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Pembayaran Pending',
+                        text: 'Silakan selesaikan pembayaran Anda',
+                        confirmButtonColor: '#4A90E2'
+                    });
+                    fetchBookings();
+                },
+                onError: function (result) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Pembayaran Gagal',
+                        text: 'Mohon coba lagi atau pilih metode pembayaran lain',
+                        confirmButtonColor: '#4A90E2'
+                    });
+                },
+                onClose: function () {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Pembayaran Dibatalkan',
+                        text: 'Anda dapat mencoba pembayaran lagi nanti',
+                        confirmButtonColor: '#4A90E2'
+                    });
+                }
+            });
+        } catch (err) {
+            console.log(err, '<<< error payment');
+
+            Swal.fire('Error', 'Failed to initiate payment', 'error');
+        }
     };
 
     const handleLogout = () => {
@@ -145,7 +194,7 @@ export default function StudentBookings() {
                                                 {booking.bookingStatus}
                                             </span>
                                             <span className={`badge ${booking.paymentStatus === 'Pending' ? 'bg-warning' :
-                                                booking.paymentStatus === 'Paid' ? 'bg-success' :
+                                                booking.paymentStatus === 'paid' ? 'bg-success' :
                                                     'bg-danger'
                                                 }`}>
                                                 {booking.paymentStatus}
@@ -183,6 +232,15 @@ export default function StudentBookings() {
                                                 className="btn btn-outline-danger w-100"
                                             >
                                                 Cancel Booking
+                                            </button>
+                                        )}
+
+                                        {booking.paymentStatus === 'Pending' && (
+                                            <button
+                                                onClick={() => handlePayment(booking.id)}
+                                                className="btn btn-primary w-100 mt-3"
+                                            >
+                                                Pay Now
                                             </button>
                                         )}
                                     </div>

@@ -5,7 +5,9 @@ const tutorRoutes = require('./tutor');
 const scheduleRoutes = require('./schedule');
 const bookingRoutes = require('./booking');
 const aiRoutes = require('./openai');
+const paymentRoutes = require('./payment');
 
+router.use('/', paymentRoutes);
 router.use('/', aiRoutes);
 router.use('/', userRoutes);
 router.use('/', tutorRoutes);

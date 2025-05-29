@@ -43,10 +43,21 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: false,
             defaultValue: 'Pending',
         },
+        paymentToken: {
+            type: DataTypes.STRING,
+            allowNull: true
+        },
+        paymentUrl: {
+            type: DataTypes.STRING,
+            allowNull: true
+        },
         paymentStatus: {
             type: DataTypes.STRING,
             allowNull: false,
             defaultValue: 'Pending',
+            validate: {
+                isIn: [['Pending', 'paid', 'failed', 'expired']]
+            }
         }
     }, {
         sequelize,
