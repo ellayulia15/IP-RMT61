@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "npx nodemon app",
+    "dev": "npx nodemon bin/www",
     "test": "jest --detectOpenHandles --forceExit --verbose --coverage"
   },
   "keywords": [],
