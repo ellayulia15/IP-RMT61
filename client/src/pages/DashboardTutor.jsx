@@ -4,23 +4,23 @@ import { useDispatch, useSelector } from 'react-redux';
 import Swal from 'sweetalert2';
 import { fetchTutorProfile } from '../stores/tutorProfile/tutorProfileSlice';
 import { fetchTutorBookings } from '../stores/bookings/bookingsSlice';
+import { fetchTutorSchedules } from '../stores/schedules/schedulesSlice';
 
 export default function DashboardTutor() {
     const navigate = useNavigate();
-    const dispatch = useDispatch();
-    const { profile: tutorProfile, loading: profileLoading } = useSelector(state => state.tutorProfile);
+    const dispatch = useDispatch();    const { profile: tutorProfile, loading: profileLoading } = useSelector(state => state.tutorProfile);
     const { items: bookings, loading: bookingsLoading } = useSelector(state => state.bookings);
+    const { items: schedules } = useSelector(state => state.schedules);
 
     useEffect(() => {
         const token = localStorage.getItem('access_token');
         if (!token) {
             navigate('/login');
             return;
-        }
-
-        Promise.all([
+        }        Promise.all([
             dispatch(fetchTutorProfile()).unwrap(),
-            dispatch(fetchTutorBookings()).unwrap()
+            dispatch(fetchTutorBookings()).unwrap(),
+            dispatch(fetchTutorSchedules()).unwrap()
         ]).catch((error) => {
             if (error.response?.status === 401) {
                 Swal.fire({
@@ -127,9 +127,8 @@ export default function DashboardTutor() {
                                                 <div className="bg-primary bg-opacity-10 p-3 rounded">
                                                     <i className="bi bi-calendar-check text-primary h4 mb-0"></i>
                                                 </div>
-                                                <div className="ms-3">
-                                                    <h3 className="h6 mb-1">Total Schedules</h3>
-                                                    <h4 className="h3 mb-0">{tutorProfile.totalSchedules}</h4>
+                                                <div className="ms-3">                                                    <h3 className="h6 mb-1">Total Schedules</h3>
+                                                    <h4 className="h3 mb-0">{schedules.length}</h4>
                                                 </div>
                                             </div>
                                             <Link to="/tutor/schedules" className="btn btn-light w-100">

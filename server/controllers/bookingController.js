@@ -3,6 +3,11 @@ const { Booking, Schedule, Tutor, User } = require('../models');
 class BookingController {
     static async getAllBookings(req, res, next) {
         try {
+            console.log('GET /bookings', {
+                user: req.user,
+                headers: req.headers
+            });
+
             let whereClause = {};
             let includeOptions = [
                 {
@@ -20,14 +25,17 @@ class BookingController {
             // If user is student, show only their bookings
             if (req.user.role === 'Student') {
                 whereClause.studentId = req.user.id;
-            }
-            // If user is tutor, show bookings for their schedules
+            }            // If user is tutor, show bookings for their schedules
             else if (req.user.role === 'Tutor') {
                 const tutorProfile = await Tutor.findOne({
                     where: { UserId: req.user.id }
                 });
                 if (!tutorProfile) {
-                    throw { name: 'NotFound', message: 'Tutor profile not found' };
+                    // If no profile exists yet, return empty bookings
+                    return res.json({
+                        message: 'No tutor profile found',
+                        data: []
+                    });
                 }
                 includeOptions = [
                     {
@@ -42,36 +50,40 @@ class BookingController {
                         }]
                     }
                 ];
-            }
-
-            const bookings = await Booking.findAll({
+            } const bookings = await Booking.findAll({
                 where: whereClause,
                 include: includeOptions,
                 order: [['createdAt', 'DESC']]
             });
 
             res.json({
-                message: 'Bookings retrieved successfully',
-                data: bookings
+                message: bookings.length ? 'Bookings retrieved successfully' : 'No bookings found',
+                data: bookings // Will be empty array if no bookings
             });
         } catch (err) {
             next(err);
         }
-    }
-
-    static async createBooking(req, res, next) {
-        try {
-            // Only students can create bookings
+    }    static async createBooking(req, res, next) {
+        try {            // Only students can create bookings
             if (req.user.role !== 'Student') {
-                throw { name: 'Forbidden', message: 'Only students can create bookings' };
+                return res.status(403).json({
+                    message: 'Only students can create bookings'
+                });
             }
 
             const { ScheduleId } = req.body;
+            if (!ScheduleId) {
+                return res.status(400).json({
+                    message: 'ScheduleId is required'
+                });
+            }
 
             // Check if schedule exists and is available
             const schedule = await Schedule.findByPk(ScheduleId);
             if (!schedule) {
-                throw { name: 'NotFound', message: 'Schedule not found' };
+                return res.status(404).json({
+                    message: 'Schedule not found'
+                });
             }
 
             // Check if student already has a booking for this schedule
@@ -83,10 +95,10 @@ class BookingController {
             });
 
             if (existingBooking) {
-                throw { name: 'BadRequest', message: 'You already have a booking for this schedule' };
-            }
-
-            // Create booking
+                return res.status(400).json({
+                    message: 'You already have a booking for this schedule'
+                });
+            }            // Create booking
             const booking = await Booking.create({
                 studentId: req.user.id,
                 ScheduleId,
@@ -94,25 +106,27 @@ class BookingController {
                 paymentStatus: 'Pending'
             });
 
-            res.status(201).json({
+            return res.status(201).json({
                 message: 'Booking created successfully',
                 data: booking
             });
         } catch (err) {
             next(err);
         }
-    }
-
-    static async updateBookingStatus(req, res, next) {
+    }    static async updateBookingStatus(req, res, next) {
         try {
             // Only tutors can update booking status
             if (req.user.role !== 'Tutor') {
-                throw { name: 'Forbidden', message: 'Only tutors can update booking status' };
+                return res.status(403).json({
+                    message: 'Only tutors can update booking status'
+                });
             }
 
             const { status } = req.body;
             if (!['Approved', 'Rejected'].includes(status)) {
-                throw { name: 'BadRequest', message: 'Invalid status. Must be approved or rejected' };
+                return res.status(400).json({
+                    message: 'Invalid status. Must be approved or rejected'
+                });
             }
 
             // Get tutor profile
@@ -159,13 +173,13 @@ class BookingController {
         } catch (err) {
             next(err);
         }
-    }
-
-    static async deleteBooking(req, res, next) {
+    }    static async deleteBooking(req, res, next) {
         try {
             // Only students can delete their bookings
             if (req.user.role !== 'Student') {
-                throw { name: 'Forbidden', message: 'Only students can delete bookings' };
+                return res.status(403).json({
+                    message: 'Only students can delete bookings'
+                });
             }
 
             // Find booking and verify ownership
@@ -177,16 +191,20 @@ class BookingController {
             });
 
             if (!booking) {
-                throw { name: 'NotFound', message: 'Booking not found' };
+                return res.status(404).json({
+                    message: 'Booking not found'
+                });
             }
 
             if (booking.bookingStatus !== 'Pending') {
-                throw { name: 'BadRequest', message: 'Can only delete pending bookings' };
+                return res.status(400).json({
+                    message: 'Can only delete pending bookings'
+                });
             }
 
             await booking.destroy();
 
-            res.json({
+            return res.status(200).json({
                 message: 'Booking deleted successfully'
             });
         } catch (err) {

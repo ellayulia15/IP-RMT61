@@ -8,19 +8,12 @@ export const fetchTutorProfile = createAsyncThunk(
             const token = localStorage.getItem('access_token');
             if (!token) {
                 return rejectWithValue('No auth token found');
-            }
-
-            const { data } = await http.get('/tutors', {
+            }            const { data } = await http.get('/tutors', {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
-            });
-
-            if (!data.data) {
-                return rejectWithValue('Profile not found');
-            }
-
-            return data.data;
+            });            // Return null if no profile exists yet
+            return data.data || null;
         } catch (error) {
             if (error.response?.status === 401) {
                 localStorage.clear();

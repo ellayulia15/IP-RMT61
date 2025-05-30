@@ -3,7 +3,15 @@ const app = require('../app');
 const { User, Tutor, Schedule, Booking } = require('../models');
 const { generateToken } = require('../helpers/jwt');
 const { hashPassword } = require('../helpers/bcrypt');
-jest.mock('../config/midtrans');
+// Mock Midtrans
+jest.mock('../config/midtrans', () => {
+    return {
+        createTransaction: jest.fn().mockResolvedValue({
+            token: 'mock-token',
+            redirect_url: 'https://mock-payment-url.com'
+        })
+    };
+});
 
 let studentToken;
 let testBookingId;
@@ -81,15 +89,17 @@ describe('PaymentController', () => {
 
             expect(response.status).toBe(404);
         });
-    });
-
-    describe('POST /payments/notification', () => {
+    });    describe('POST /payments/notification', () => {
         it('should handle successful payment notification', async () => {
+            // Create an order_id that matches the pattern in the controller
+            const orderId = `BOOKING-${testBookingId}-${Date.now()}`;
+
             const response = await request(app)
                 .post('/payments/notification')
                 .send({
-                    order_id: `BOOKING-${testBookingId}-${Date.now()}`,
-                    transaction_status: 'settlement'
+                    transaction_status: 'settlement',
+                    order_id: orderId,
+                    fraud_status: 'accept'
                 });
 
             expect(response.status).toBe(200);

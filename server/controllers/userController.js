@@ -8,7 +8,6 @@ class UserController {
         try {
             const { fullName, email, password, role } = req.body;
             const user = await User.create({ fullName, email, password, role });
-
             res.status(201).json({
                 message: 'User registered successfully',
                 data: {
@@ -21,7 +20,7 @@ class UserController {
         } catch (err) {
             next(err);
         }
-    }    static async login(req, res, next) {
+    } static async login(req, res, next) {
         try {
             const { email, password, role } = req.body;
             if (!email) {
@@ -32,21 +31,38 @@ class UserController {
             }
             if (!role) {
                 throw { name: 'BadRequest', message: 'Role selection is required' };
-            }
-
-            // Check if user exists with correct role
-            const user = await User.findOne({ 
-                where: { 
-                    email,
-                    role 
-                } 
+            }            // First find user by email only
+            const user = await User.findOne({
+                where: { email }
             });
-            if (!user) {
+
+            // Then check role separately
+            if (!user || user.role !== role) {
                 throw { name: 'Unauthorized', message: 'Invalid email/password or role' };
             }
+            if (!user) {
+                throw { name: 'Unauthorized', message: 'Invalid email/password or role' };
+            }            // Debug info
+            console.log('Login attempt:', {
+                inputEmail: email,
+                inputRole: role,
+                foundUser: user ? {
+                    id: user.id,
+                    email: user.email,
+                    role: user.role,
+                    hashedPassword: user.password
+                } : null
+            });
 
             // Verify password
             const isPasswordValid = comparePassword(password, user.password);
+
+            // Debug password check
+            console.log('Password check:', {
+                isValid: isPasswordValid,
+                inputPassword: password
+            });
+
             if (!isPasswordValid) {
                 throw { name: 'Unauthorized', message: 'Invalid email/password' };
             }
@@ -56,13 +72,11 @@ class UserController {
                 id: user.id,
                 email: user.email,
                 role: user.role
-            });
-
-            res.json({
+            }); res.status(200).json({
                 message: 'Login successful',
                 data: {
                     access_token,
-                    username: user.username,
+                    fullName: user.fullName,
                     email: user.email,
                     role: user.role
                 }

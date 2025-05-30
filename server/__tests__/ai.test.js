@@ -3,7 +3,30 @@ const app = require('../app');
 const { User, Tutor } = require('../models');
 const { generateToken } = require('../helpers/jwt');
 const { hashPassword } = require('../helpers/bcrypt');
-jest.mock('openai');
+
+// Mock OpenAI
+// Mock OpenAI with the exact model structure
+jest.mock('openai', () => {
+    return {
+        OpenAI: jest.fn().mockImplementation(() => ({
+            chat: {
+                completions: {
+                    create: jest.fn().mockResolvedValue({
+                        choices: [{
+                            message: {
+                                role: 'assistant',
+                                content: 'I recommend Test Tutor who teaches Mathematics with an Interactive style.'
+                            }
+                        }],
+                        usage: {
+                            total_tokens: 150
+                        }
+                    })
+                }
+            }
+        }))
+    };
+});
 
 let studentToken;
 
@@ -43,10 +66,10 @@ beforeAll(async () => {
 });
 
 describe('AIController', () => {
-    describe('POST /ai/recommendations', () => {
+    describe('POST /ai/chat', () => {
         it('should return AI recommendations based on user input', async () => {
             const response = await request(app)
-                .post('/ai/recommendations')
+                .post('/ai/chat')
                 .set('Authorization', `Bearer ${studentToken}`)
                 .send({
                     messages: [
@@ -64,7 +87,7 @@ describe('AIController', () => {
 
         it('should fail with empty messages', async () => {
             const response = await request(app)
-                .post('/ai/recommendations')
+                .post('/ai/chat')
                 .set('Authorization', `Bearer ${studentToken}`)
                 .send({
                     messages: []

@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useDispatch, useSelector } from 'react-redux';
 import Swal from 'sweetalert2';
-import { fetchMyBookings, deleteBooking } from '../stores/bookings/bookingsSlice';
+import { fetchMyBookings, deleteBooking, updatePaymentStatus } from '../stores/bookings/bookingsSlice';
 import http from '../lib/http';
 
 export default function StudentBookings() {
@@ -46,17 +46,17 @@ export default function StudentBookings() {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('access_token')}`
                 }
-            }); console.log('Payment token received:', data);
-
-            window.snap.pay(data.paymentToken, {
+            }); console.log('Payment token received:', data);            window.snap.pay(data.paymentToken, {
                 onSuccess: function (result) {
+                    console.log('Payment success:', result);
+                    // Update payment status immediately
+                    dispatch(updatePaymentStatus({ bookingId: id, status: 'Paid' }));
                     Swal.fire({
                         icon: 'success',
                         title: 'Pembayaran Berhasil!',
                         text: 'Terima kasih atas pembayaran Anda',
                         confirmButtonColor: '#4A90E2'
                     });
-                    dispatch(fetchMyBookings());
                 },
                 onPending: function (result) {
                     Swal.fire({
@@ -139,12 +139,13 @@ export default function StudentBookings() {
                                                     'bg-danger'
                                                 }`}>
                                                 {booking.bookingStatus}
-                                            </span>
-                                            <span className={`badge ${booking.paymentStatus === 'Pending' ? 'bg-warning' :
-                                                booking.paymentStatus === 'paid' ? 'bg-success' :
-                                                    'bg-danger'
-                                                }`}>
-                                                {booking.paymentStatus}
+                                            </span>                                            <span className={`badge ${
+                                                booking.paymentStatus === 'Pending' ? 'bg-warning' :
+                                                booking.paymentStatus === 'Paid' ? 'bg-success' :
+                                                booking.paymentStatus === 'Failed' ? 'bg-danger' :
+                                                'bg-secondary'
+                                            }`}>
+                                                {booking.paymentStatus || 'Pending'}
                                             </span>
                                         </div>
 
@@ -178,16 +179,15 @@ export default function StudentBookings() {
                                             >
                                                 Cancel Booking
                                             </button>
-                                        )}
-
-                                        {booking.bookingStatus === 'Approved' && booking.paymentStatus === 'Pending' && (
+                                        )}                                        {booking.bookingStatus === 'Approved' && 
+                                        (booking.paymentStatus === 'Pending' || !booking.paymentStatus) && (
                                             <button
                                                 onClick={() => handlePayment(booking.id)}
                                                 className="btn btn-primary w-100 mt-3"
                                             >
                                                 Pay Now
                                             </button>
-                                        )}                                        {booking.bookingStatus === 'Rejected' && (
+                                        )}{booking.bookingStatus === 'Rejected' && (
                                             <div className="alert alert-danger mt-3" role="alert">
                                                 <i className="bi bi-exclamation-triangle-fill me-2"></i>
                                                 Booking rejected by tutor. Please check other available schedules.

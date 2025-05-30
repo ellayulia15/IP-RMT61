@@ -6,6 +6,11 @@ class AIController {
     static async chatRecommendation(req, res, next) {
         try {
             const { messages } = req.body;
+
+            if (!messages || !Array.isArray(messages) || messages.length === 0) {
+                return res.status(400).json({ message: 'Messages array is required' });
+            }
+
             const tutors = await Tutor.findAll({
                 include: [{ model: User, attributes: ['fullName', 'email'] }],
                 limit: 10
@@ -20,9 +25,7 @@ class AIController {
                 content: `Berikut adalah daftar tutor:\n${tutorList}\nGunakan data ini untuk merekomendasikan tutor yang cocok berdasarkan preferensi user.`
             };
 
-            const aiMessages = [systemPrompt, ...messages];
-
-            const completion = await openai.chat.completions.create({
+            const aiMessages = [systemPrompt, ...messages];            const completion = await openai.chat.completions.create({
                 model: "gpt-4.1-nano",
                 messages: aiMessages,
                 max_tokens: 200,
@@ -30,8 +33,10 @@ class AIController {
             console.log('API KEY:', process.env.OPENAI_API_KEY);
             res.json({ reply: completion.choices[0].message.content });
         } catch (err) {
-            console.log(err);
-            next(err);
+            console.error('AI Error:', err);
+            res.status(500).json({ 
+                message: err.message || 'Internal server error'
+            });
         }
     }
 }

@@ -9,12 +9,22 @@ let testUserId;
 
 beforeAll(async () => {
     await User.destroy({ truncate: true, cascade: true });
+    
+    // Create test user without hashing password in test
     const testUser = await User.create({
         fullName: 'Test User',
         email: 'test@mail.com',
-        password: hashPassword('password123'),
+        password: 'password123', // Let the model hooks handle password hashing
         role: 'Student'
     });
+
+    console.log('Test user created:', {
+        id: testUser.id,
+        email: testUser.email,
+        role: testUser.role,
+        password: testUser.password // to verify it's hashed
+    });
+
     testUserId = testUser.id;
     validToken = generateToken({
         id: testUser.id,
@@ -56,8 +66,18 @@ describe('UserController', () => {
         });
     });
 
-    describe('POST /login', () => {
-        it('should successfully login with correct credentials', async () => {
+    describe('POST /login', () => {        it('should successfully login with correct credentials', async () => {
+            // First verify the user exists
+            const user = await User.findOne({ 
+                where: { email: 'test@mail.com' } 
+            });
+            console.log('Before login, verifying user:', {
+                exists: !!user,
+                email: user?.email,
+                role: user?.role,
+                hashedPassword: user?.password
+            });
+
             const response = await request(app)
                 .post('/login')
                 .send({
@@ -66,9 +86,17 @@ describe('UserController', () => {
                     role: 'Student'
                 });
 
+            console.log('Login response:', {
+                status: response.status,
+                body: response.body
+            });
+
             expect(response.status).toBe(200);
             expect(response.body).toHaveProperty('message', 'Login successful');
             expect(response.body.data).toHaveProperty('access_token');
+            expect(response.body.data).toHaveProperty('fullName');
+            expect(response.body.data).toHaveProperty('email');
+            expect(response.body.data).toHaveProperty('role');
         });
 
         it('should fail with incorrect password', async () => {
