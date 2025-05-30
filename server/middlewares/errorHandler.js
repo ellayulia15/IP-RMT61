@@ -1,44 +1,28 @@
 function errorHandler(err, req, res, next) {
-    let status = err.status || 500;
-    let message = err.message || 'Internal Server Error';
-
     switch (err.name) {
-        case 'SequelizeForeignKeyConstraintError':
-            status = 400;
-            message = 'Referenced data does not exist';
-            break;
-        case 'SequelizeDatabaseError':
-            status = 400;
-            message = 'Invalid data format';
-            break;
         case 'SequelizeValidationError':
         case 'SequelizeUniqueConstraintError':
-            status = 400;
-            message = err.errors[0].message;
+            res.status(400).json({ message: err.errors[0].message });
             break;
         case 'BadRequest':
-            status = 400;
-            message = err.message;
+            res.status(400).json({ message: err.message });
             break;
         case 'JsonWebTokenError':
-            status = 401;
-            message = 'Invalid token';
+            res.status(401).json({ message: 'Invalid token' });
             break;
         case 'Unauthorized':
-            status = 401;
-            message = err.message;
+            res.status(401).json({ message: err.message });
             break;
         case 'Forbidden':
-            status = 403;
-            message = err.message;
+            res.status(403).json({ message: err.message });
             break;
         case 'NotFound':
-            status = 404;
-            message = err.message;
+            res.status(404).json({ message: err.message });
+            break;
+        default:
+            res.status(err.status || 500).json({ message: err.message || 'Internal Server Error' });
             break;
     }
-
-    res.status(status).json({ message });
 }
 
 module.exports = errorHandler;

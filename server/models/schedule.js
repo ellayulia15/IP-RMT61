@@ -35,11 +35,6 @@ module.exports = (sequelize, DataTypes) => {
                 }, notNull: {
                     msg: 'Date is required'
                 },
-                isAfterToday(value) {
-                    if (value < new Date()) {
-                        throw new Error('Date cannot be in the past');
-                    }
-                }
             }
         },
         time: {

@@ -26,11 +26,8 @@ module.exports = (sequelize, DataTypes) => {
                 notEmpty: {
                     msg: 'User ID is required'
                 },
-                async isTutor(value) {
-                    const user = await sequelize.models.User.findByPk(value);
-                    if (!user || user.role !== 'Tutor') {
-                        throw new Error('Only users with role Tutor can create a tutor profile');
-                    }
+                notNull: {
+                    msg: 'User ID is required'
                 }
             }
         },
