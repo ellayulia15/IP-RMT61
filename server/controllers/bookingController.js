@@ -63,7 +63,7 @@ class BookingController {
         } catch (err) {
             next(err);
         }
-    }    static async createBooking(req, res, next) {
+    } static async createBooking(req, res, next) {
         try {            // Only students can create bookings
             if (req.user.role !== 'Student') {
                 return res.status(403).json({
@@ -113,7 +113,7 @@ class BookingController {
         } catch (err) {
             next(err);
         }
-    }    static async updateBookingStatus(req, res, next) {
+    } static async updateBookingStatus(req, res, next) {
         try {
             // Only tutors can update booking status
             if (req.user.role !== 'Tutor') {
@@ -173,7 +173,7 @@ class BookingController {
         } catch (err) {
             next(err);
         }
-    }    static async deleteBooking(req, res, next) {
+    } static async deleteBooking(req, res, next) {
         try {
             // Only students can delete their bookings
             if (req.user.role !== 'Student') {

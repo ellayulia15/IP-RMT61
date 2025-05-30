@@ -37,11 +37,13 @@ module.exports = (sequelize, DataTypes) => {
                     msg: 'Schedule ID is required'
                 }
             }
-        },
-        bookingStatus: {
+        }, bookingStatus: {
             type: DataTypes.STRING,
             allowNull: false,
             defaultValue: 'Pending',
+            validate: {
+                isIn: [['Pending', 'Approved', 'Rejected']]
+            }
         },
         paymentToken: {
             type: DataTypes.STRING,
@@ -55,7 +57,7 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING,
             allowNull: false,
             defaultValue: 'Pending', validate: {
-                isIn: [['Pending', 'paid', 'failed', 'expired', 'cancelled']]
+                isIn: [['Pending', 'Paid', 'Failed', 'Expired', 'Cancelled']]
             }
         }
     }, {

@@ -25,7 +25,7 @@ class AIController {
                 content: `Berikut adalah daftar tutor:\n${tutorList}\nGunakan data ini untuk merekomendasikan tutor yang cocok berdasarkan preferensi user.`
             };
 
-            const aiMessages = [systemPrompt, ...messages];            const completion = await openai.chat.completions.create({
+            const aiMessages = [systemPrompt, ...messages]; const completion = await openai.chat.completions.create({
                 model: "gpt-4.1-nano",
                 messages: aiMessages,
                 max_tokens: 200,
@@ -33,10 +33,7 @@ class AIController {
             console.log('API KEY:', process.env.OPENAI_API_KEY);
             res.json({ reply: completion.choices[0].message.content });
         } catch (err) {
-            console.error('AI Error:', err);
-            res.status(500).json({ 
-                message: err.message || 'Internal server error'
-            });
+            next(err)
         }
     }
 }
