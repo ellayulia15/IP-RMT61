@@ -58,30 +58,51 @@ class PaymentController {
 
             next(err);
         }
-    }
-
-    static async handleNotification(req, res, next) {
+    }    static async handleNotification(req, res, next) {
         try {
-            const notification = await snap.transaction.notification(req.body);
+            console.log('Payment notification received:', req.body);
+            
+            let notification;
+            try {
+                // Try to parse as Midtrans notification
+                notification = await snap.transaction.notification(req.body);
+            } catch (error) {
+                console.log('Failed to parse Midtrans notification:', error);
+                // If parsing fails, use request body directly (for testing)
+                notification = req.body;
+            }
+            
+            console.log('Parsed notification:', notification);
+            
             const orderId = notification.order_id;
             const bookingId = orderId.split('-')[1];
+            
+            console.log('Extracted booking ID:', bookingId);
 
             let paymentStatus;
             if (notification.transaction_status === 'capture' ||
                 notification.transaction_status === 'settlement') {
-                paymentStatus = 'paid';
+                paymentStatus = 'Paid';
             } else if (notification.transaction_status === 'deny' ||
                 notification.transaction_status === 'cancel' ||
                 notification.transaction_status === 'expire') {
-                paymentStatus = 'failed';
+                paymentStatus = 'Failed';
             } else {
                 paymentStatus = 'Pending';
             }
+            
+            console.log('Updating payment status to:', paymentStatus);
 
-            await Booking.update(
+            const [updateCount] = await Booking.update(
                 { paymentStatus },
                 { where: { id: bookingId } }
             );
+            
+            console.log('Updated bookings count:', updateCount);
+
+            // Double check the update
+            const booking = await Booking.findByPk(bookingId);
+            console.log('Booking after update:', booking.paymentStatus);
 
             res.json({ message: 'OK' });
         } catch (err) {

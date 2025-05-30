@@ -42,6 +42,7 @@ export const fetchTutorBookings = createAsyncThunk(
             });
             return data.data;
         } catch (error) {
+            console.log(error, '<<< err di booking');
             if (error.response?.status === 401) {
                 localStorage.clear();
                 return rejectWithValue('Session expired');
@@ -113,6 +114,15 @@ export const deleteBooking = createAsyncThunk(
     }
 );
 
+export const updatePaymentStatus = createAsyncThunk(
+    'bookings/updatePaymentStatus',
+    async ({ bookingId, status }, { getState }) => {
+        const state = getState();
+        const booking = state.bookings.items.find(b => b.id === bookingId);
+        return { ...booking, paymentStatus: status };
+    }
+);
+
 const bookingsSlice = createSlice({
     name: 'bookings',
     initialState: {
@@ -167,6 +177,12 @@ const bookingsSlice = createSlice({
             .addCase(deleteBooking.fulfilled, (state, action) => {
                 // Remove the deleted booking from state
                 state.items = state.items.filter(item => item.id !== action.payload);
+            })
+            .addCase(updatePaymentStatus.fulfilled, (state, action) => {
+                const index = state.items.findIndex(item => item.id === action.payload.id);
+                if (index !== -1) {
+                    state.items[index] = action.payload;
+                }
             });
     }
 });

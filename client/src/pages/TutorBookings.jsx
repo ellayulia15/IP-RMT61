@@ -91,25 +91,34 @@ export default function TutorBookings() {
                                                 }`}>
                                                 {booking.paymentStatus}
                                             </span>
-                                        </div>
-
-                                        <h5 className="card-title mb-3">
-                                            {booking.Schedule?.date && new Date(booking.Schedule.date).toLocaleDateString('en-US', {
-                                                weekday: 'long',
-                                                year: 'numeric',
-                                                month: 'long',
-                                                day: 'numeric'
-                                            })}
+                                        </div>                                        <h5 className="card-title mb-2">
+                                            {booking.Student?.fullName}
                                         </h5>
 
-                                        <p className="card-text mb-2">
-                                            <i className="bi bi-clock me-2"></i>
-                                            {booking.Schedule?.time}
+                                        <p className="text-muted small mb-3">
+                                            <i className="bi bi-envelope me-2"></i>
+                                            {booking.Student?.email}
                                         </p>
-                                        <p className="card-text mb-2">
-                                            <i className="bi bi-person me-2"></i>
-                                            Student: {booking.Student?.fullName}
-                                        </p>
+
+                                        <div className="card bg-light mb-3">
+                                            <div className="card-body py-2">
+                                                <h6 className="card-subtitle mb-2">Schedule Details</h6>
+                                                <p className="card-text mb-1">
+                                                    <i className="bi bi-calendar me-2"></i>
+                                                    {booking.Schedule?.date && new Date(booking.Schedule.date).toLocaleDateString('en-US', {
+                                                        weekday: 'long',
+                                                        year: 'numeric',
+                                                        month: 'long',
+                                                        day: 'numeric'
+                                                    })}
+                                                </p>
+                                                <p className="card-text mb-0">
+                                                    <i className="bi bi-clock me-2"></i>
+                                                    {booking.Schedule?.time}
+                                                </p>
+                                            </div>
+                                        </div>
+
                                         <p className="card-text mb-4">
                                             <i className="bi bi-currency-exchange me-2"></i>
                                             {Number(booking.Schedule?.fee).toLocaleString('id-ID', {

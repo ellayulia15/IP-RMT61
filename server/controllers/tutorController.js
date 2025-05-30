@@ -20,7 +20,9 @@ class TutorController {
         } catch (err) {
             next(err);
         }
-    } static async getTutorById(req, res, next) {
+    }
+    
+    static async getTutorById(req, res, next) {
         try {
             const tutor = await Tutor.findByPk(req.params.id, {
                 include: [
@@ -76,8 +78,7 @@ class TutorController {
             next(err);
         }
     } static async getMyProfile(req, res, next) {
-        try {
-            // Check if user is tutor
+        try {            // Check if user is tutor
             if (req.user.role !== 'Tutor') {
                 throw { name: 'Forbidden', message: 'Only tutors can access this endpoint' };
             }
@@ -87,8 +88,12 @@ class TutorController {
                 where: { UserId: req.user.id }
             });
 
+            // If no profile exists yet, return empty data
             if (!tutorProfile) {
-                throw { name: 'NotFound', message: 'Tutor profile not found' };
+                return res.json({
+                    message: 'No tutor profile found',
+                    data: null
+                });
             }
 
             // Get schedules separately to avoid any join issues

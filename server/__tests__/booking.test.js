@@ -116,12 +116,10 @@ describe('BookingController', () => {
             expect(response.status).toBe(200);
             expect(Array.isArray(response.body.data)).toBe(true);
         });
-    });
-
-    describe('PUT /bookings/:id/status', () => {
+    });    describe('PATCH /bookings/:id/status', () => {
         it('should update booking status when authenticated as tutor', async () => {
             const response = await request(app)
-                .put(`/bookings/${testBookingId}/status`)
+                .patch(`/bookings/${testBookingId}/status`)
                 .set('Authorization', `Bearer ${tutorToken}`)
                 .send({
                     status: 'Approved'
@@ -133,7 +131,7 @@ describe('BookingController', () => {
 
         it('should fail when authenticated as student', async () => {
             const response = await request(app)
-                .put(`/bookings/${testBookingId}/status`)
+                .patch(`/bookings/${testBookingId}/status`)
                 .set('Authorization', `Bearer ${studentToken}`)
                 .send({
                     status: 'Approved'
